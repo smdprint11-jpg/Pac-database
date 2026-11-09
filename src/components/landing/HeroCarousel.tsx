@@ -53,32 +53,32 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onOpenLogin }) => {
           />
         ))}
         {/* Islamic gradient and vignette overlay */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/90 via-slate-950/80 to-slate-950/90" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-500/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-emerald-950/85 to-slate-950/95" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-500/20 via-transparent to-transparent" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="max-w-3xl">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Organization badge */}
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs font-semibold backdrop-blur-md mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>{settings.organizationName} • {settings.period}</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-xs sm:text-sm font-semibold backdrop-blur-md mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+            <span>{settings.organizationName || 'PAC IPNU IPPNU DUKUN'} • {settings.period || 'Masa Khidmat 2024 – 2026'}</span>
           </div>
 
-          {/* Big Titles */}
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight text-white mb-4">
-            <span className="block text-emerald-400 font-serif tracking-normal mb-1 text-xl sm:text-2xl font-semibold">
+          {/* Big Titles - Centered & Larger */}
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] sm:leading-[1.1] text-white mb-6 text-center">
+            <span className="block text-emerald-400 font-serif tracking-normal mb-2 text-xl sm:text-2xl md:text-3xl font-semibold">
               {slide.tagline}
             </span>
             {slide.title}
           </h1>
 
-          <p className="text-base sm:text-lg text-slate-300 leading-relaxed mb-8 max-w-2xl font-normal">
+          <p className="text-base sm:text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto text-center font-normal">
             {slide.description}
           </p>
 
           {/* Call to action buttons */}
-          <div className="flex flex-wrap items-center gap-3.5">
+          <div className="flex flex-wrap items-center justify-center gap-3.5 sm:gap-4">
             <a
               href="#profil"
               className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm shadow-lg shadow-emerald-900/40 hover:shadow-emerald-600/30 transition transform hover:-translate-y-0.5"
@@ -97,7 +97,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onOpenLogin }) => {
             </button>
 
             <a
-              href="#database"
+              href="#ranting-pk"
               className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl text-slate-300 hover:text-white font-medium text-sm transition"
             >
               <Database className="w-4 h-4 text-emerald-400" />
@@ -106,17 +106,17 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onOpenLogin }) => {
           </div>
 
           {/* Quick micro highlights */}
-          <div className="mt-12 pt-8 border-t border-white/10 grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs text-slate-300">
+          <div className="mt-12 pt-8 border-t border-white/10 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs sm:text-sm text-slate-300">
             <div className="flex items-center gap-2.5">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
               <span>18 Ranting Desa Terdata</span>
             </div>
             <div className="flex items-center gap-2.5">
-              <div className="w-2 h-2 rounded-full bg-teal-400" />
+              <div className="w-2.5 h-2.5 rounded-full bg-teal-400" />
               <span>6 Komisariat Lembaga</span>
             </div>
-            <div className="flex items-center gap-2.5 col-span-2 sm:col-span-1">
-              <div className="w-2 h-2 rounded-full bg-amber-400" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
               <span>Pengesahan Dokumen SP Terintegrasi</span>
             </div>
           </div>

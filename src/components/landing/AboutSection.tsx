@@ -124,7 +124,7 @@ export const AboutSection: React.FC = () => {
           </div>
         </div>
 
-        {/* DATABASE KETUA IPNU & IPPNU DARI MASA KE MASA */}
+        {/* FOTO DAN DATA KETUA IPNU & IPPNU DARI MASA KE MASA */}
         <div id="ketua-ipnu-ippnu" className="pt-12 scroll-mt-24">
           <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs space-y-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -134,7 +134,7 @@ export const AboutSection: React.FC = () => {
                   <span>Rekam Jejak Kepemimpinan</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Database Ketua PAC IPNU & IPPNU Dukun
+                  Foto dan Data Ketua IPNU IPPNU
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
                   Estafet kepemimpinan dan khidmat para nahkoda Pelajar NU Kecamatan Dukun dari masa ke masa
@@ -243,7 +243,7 @@ export const AboutSection: React.FC = () => {
           </div>
         </div>
 
-        {/* DATABASE DEWAN PEMBINA */}
+        {/* DEWAN PEMBINA */}
         <div id="pembina" className="pt-12 scroll-mt-24">
           <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -253,7 +253,7 @@ export const AboutSection: React.FC = () => {
                   <span>Keluarga Besar Nahdlatul Ulama Dukun</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Database Dewan Pembina PAC IPNU IPPNU Dukun
+                  Dewan Pembina PAC IPNU IPPNU Dukun
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
                   Para masyayikh, sesepuh banom, dan pimpinan badan otonom pengayom kader pelajar santri
@@ -315,7 +315,7 @@ export const AboutSection: React.FC = () => {
           </div>
         </div>
 
-        {/* DATABASE MAJELIS ALUMNI */}
+        {/* MAJELIS ALUMNI */}
         <div id="alumni" className="pt-12 scroll-mt-24">
           <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -325,7 +325,7 @@ export const AboutSection: React.FC = () => {
                   <span>Jaringan & Sinergi</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Database Majelis Alumni PAC IPNU IPPNU Dukun
+                  Majelis Alumni PAC IPNU IPPNU Dukun
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
                   Kiprah pengabdian alumni lintas periode di bidang keagamaan, pendidikan, wirausaha, dan kemasyarakatan

@@ -12,6 +12,8 @@ import {
   Users,
   Sparkles,
   Quote,
+  Play,
+  Pause,
 } from 'lucide-react';
 import { Officer, PacOfficerSlide } from '../../types';
 
@@ -61,12 +63,12 @@ export const LeadershipSection: React.FC = () => {
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Automatic slideshow for PAC Leadership Carousel
+  // Automatic slideshow for PAC Leadership Carousel (3 photos per view)
   useEffect(() => {
     if (isPaused || pacSlides.length <= 1) return;
     const timer = setInterval(() => {
       setActiveSlideIndex((prev) => (prev + 1) % pacSlides.length);
-    }, 3600);
+    }, 4000);
     return () => clearInterval(timer);
   }, [isPaused, pacSlides.length]);
 
@@ -78,6 +80,16 @@ export const LeadershipSection: React.FC = () => {
     setActiveSlideIndex((prev) => (prev - 1 + pacSlides.length) % pacSlides.length);
   };
 
+  // 3 Photos visible for PAC Slideshow
+  const visiblePacSlides = [];
+  if (pacSlides.length > 0) {
+    const count = Math.min(pacSlides.length, 3);
+    for (let i = 0; i < count; i++) {
+      const idx = (activeSlideIndex + i) % pacSlides.length;
+      visiblePacSlides.push({ ...pacSlides[idx], slideIdx: idx });
+    }
+  }
+
   // Filter PAC-level officers
   const pacOfficers = officers
     .filter((o) => !o.unitId)
@@ -87,6 +99,30 @@ export const LeadershipSection: React.FC = () => {
     if (filterOrg === 'ALL') return true;
     return o.organization === filterOrg;
   });
+
+  // Data officers below: 3 cards per slide view
+  const OFFICERS_PER_PAGE = 3;
+  const [officersSlideIndex, setOfficersSlideIndex] = useState(0);
+  const [isOfficersPaused, setIsOfficersPaused] = useState(false);
+
+  const totalOfficerPages = Math.ceil(filteredOfficers.length / OFFICERS_PER_PAGE) || 1;
+
+  useEffect(() => {
+    if (isOfficersPaused || totalOfficerPages <= 1) return;
+    const timer = setInterval(() => {
+      setOfficersSlideIndex((prev) => (prev + 1) % totalOfficerPages);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [isOfficersPaused, totalOfficerPages]);
+
+  useEffect(() => {
+    setOfficersSlideIndex(0);
+  }, [filterOrg]);
+
+  const currentOfficersPage = filteredOfficers.slice(
+    officersSlideIndex * OFFICERS_PER_PAGE,
+    (officersSlideIndex + 1) * OFFICERS_PER_PAGE
+  );
 
   return (
     <section id="pengurus" className="py-20 bg-white border-b border-slate-200/60">
@@ -141,76 +177,47 @@ export const LeadershipSection: React.FC = () => {
           </div>
         </div>
 
-        {/* SLIDER BAR FOTO PENGURUS PAC (Interactive Carousel with Auto-Slideshow) */}
+        {/* SLIDER BAR FOTO PENGURUS PAC: 3 FOTO TAMPIL SLIDESHOW */}
         {pacSlides.length > 0 && (
           <div
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
-            className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden"
+            className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-green-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden"
           >
             {/* Background Decorative Rings */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
 
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 justify-between">
-              {/* Photo Card in Slider */}
-              <div className="w-48 sm:w-56 aspect-[3/4] rounded-2xl overflow-hidden border-2 border-emerald-400/40 shadow-2xl shrink-0 bg-slate-800">
-                <img
-                  src={pacSlides[activeSlideIndex].photo}
-                  alt={pacSlides[activeSlideIndex].name}
-                  className="w-full h-full object-cover transition duration-500"
-                />
-              </div>
-
-              {/* Slider Content */}
-              <div className="flex-1 space-y-4 text-center md:text-left">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-700/80 border border-emerald-400/30 text-[11px] font-bold text-amber-300">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Sorotan Kepemimpinan PAC • Slide {activeSlideIndex + 1} dari {pacSlides.length}</span>
-                </div>
-
+            <div className="relative z-10 space-y-6">
+              {/* Top Slider Header & Controls */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
                 <div>
-                  <span
-                    className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider mb-2 ${
-                      pacSlides[activeSlideIndex].organization === 'IPNU'
-                        ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/40'
-                        : 'bg-green-500/30 text-green-200 border border-green-400/40'
-                    }`}
-                  >
-                    {pacSlides[activeSlideIndex].organization}
-                  </span>
-                  <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                    {pacSlides[activeSlideIndex].name}
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-800/80 border border-emerald-400/30 text-[11px] font-bold text-amber-300">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Sorotan 3 Foto Pimpinan Harian • Slideshow Otomatis</span>
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight mt-1">
+                    Galeri Pimpinan Harian PAC Dukun
                   </h3>
-                  <p className="text-sm sm:text-base font-semibold text-emerald-300 mt-1">
-                    {pacSlides[activeSlideIndex].position}
-                  </p>
                 </div>
 
-                {pacSlides[activeSlideIndex].quote && (
-                  <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/15 text-xs sm:text-sm text-slate-100 italic leading-relaxed relative max-w-2xl">
-                    <Quote className="w-4 h-4 text-emerald-300 inline mr-2 -mt-1 opacity-70" />
-                    "{pacSlides[activeSlideIndex].quote}"
-                  </div>
-                )}
-
-                {/* Slider Controls */}
-                <div className="flex items-center justify-center md:justify-start gap-3 pt-2">
+                <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handlePrevSlide}
                     className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
                     aria-label="Slide sebelumnya"
+                    title="Slide Sebelumnya"
                   >
                     <ChevronLeft className="w-5 h-5" />
                   </button>
-                  <div className="flex items-center gap-1.5 px-2">
+                  <div className="flex items-center gap-1.5 px-1">
                     {pacSlides.map((_, idx) => (
                       <button
                         key={idx}
                         onClick={() => setActiveSlideIndex(idx)}
                         className={`h-2 rounded-full transition-all cursor-pointer ${
-                          idx === activeSlideIndex ? 'w-7 bg-amber-400' : 'w-2 bg-white/40'
+                          idx === activeSlideIndex ? 'w-6 bg-amber-400' : 'w-2 bg-white/40'
                         }`}
                         aria-label={`Pindah ke slide ${idx + 1}`}
                       />
@@ -221,84 +228,189 @@ export const LeadershipSection: React.FC = () => {
                     onClick={handleNextSlide}
                     className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
                     aria-label="Slide berikutnya"
+                    title="Slide Berikutnya"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
                 </div>
               </div>
+
+              {/* 3 Photos Display Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {visiblePacSlides.map((slideItem, sIdx) => (
+                  <div
+                    key={`${slideItem.id}-${sIdx}`}
+                    className="bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 p-5 flex flex-col justify-between hover:bg-white/15 transition transform hover:-translate-y-1 shadow-lg"
+                  >
+                    <div className="space-y-4">
+                      <div className="aspect-[3/4] rounded-xl overflow-hidden border border-emerald-400/40 shadow-md bg-slate-800">
+                        <img
+                          src={slideItem.photo}
+                          alt={slideItem.name}
+                          className="w-full h-full object-cover transition duration-500 hover:scale-105"
+                        />
+                      </div>
+                      <div>
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider mb-2 ${
+                            slideItem.organization === 'IPNU'
+                              ? 'bg-emerald-500/30 text-emerald-200 border border-emerald-400/40'
+                              : 'bg-green-500/30 text-green-200 border border-green-400/40'
+                          }`}
+                        >
+                          {slideItem.organization}
+                        </span>
+                        <h4 className="text-lg font-black text-white tracking-tight line-clamp-1">
+                          {slideItem.name}
+                        </h4>
+                        <p className="text-xs font-semibold text-emerald-300 mt-0.5 line-clamp-1">
+                          {slideItem.position}
+                        </p>
+                      </div>
+
+                      {slideItem.quote && (
+                        <p className="text-xs text-slate-200 italic line-clamp-2 bg-black/20 p-2.5 rounded-xl border border-white/10">
+                          "{slideItem.quote}"
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}
 
-        {/* Officers Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOfficers.map((officer) => {
-            const isIpnu = officer.organization === 'IPNU';
-            const badgeColor = isIpnu
-              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-              : 'bg-green-100 text-green-800 border-green-200';
+        {/* DATA PENGURUS HARIAN (Slideshow beberapa pengurus per slide) */}
+        <div
+          onMouseEnter={() => setIsOfficersPaused(true)}
+          onMouseLeave={() => setIsOfficersPaused(false)}
+          className="space-y-6"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                Daftar Lengkap Pimpinan Harian PAC
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Menampilkan {currentOfficersPage.length} data per slide • Halaman {officersSlideIndex + 1} dari {totalOfficerPages} (Total {filteredOfficers.length} Pengurus)
+              </p>
+            </div>
 
-            return (
-              <div
-                key={officer.id}
-                onClick={() => setSelectedOfficer(officer)}
-                className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between group cursor-pointer border-t-4 border-t-emerald-600"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      {officer.avatar ? (
-                        <img
-                          src={officer.avatar}
-                          alt={officer.fullName}
-                          className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500/20 shadow-xs group-hover:scale-105 transition"
-                        />
-                      ) : (
-                        <div className="w-16 h-16 rounded-2xl bg-emerald-50 border-2 border-emerald-500/20 flex items-center justify-center text-emerald-700 font-bold text-xl group-hover:scale-105 transition">
-                          {officer.fullName.charAt(0)}
-                        </div>
-                      )}
-                      <span
-                        className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase border ${badgeColor}`}
-                      >
-                        {officer.organization}
-                      </span>
-                    </div>
+            {totalOfficerPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsOfficersPaused(!isOfficersPaused)}
+                  className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
+                  title={isOfficersPaused ? 'Putar Slideshow Otomatis' : 'Jeda Slideshow'}
+                >
+                  {isOfficersPaused ? <Play className="w-4 h-4 text-emerald-600" /> : <Pause className="w-4 h-4 text-slate-600" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOfficersSlideIndex((prev) => (prev - 1 + totalOfficerPages) % totalOfficerPages)}
+                  className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
+                  title="Slide Pengurus Sebelumnya"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOfficersSlideIndex((prev) => (prev + 1) % totalOfficerPages)}
+                  className="p-2 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
+                  title="Slide Pengurus Berikutnya"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
-                        {officer.position}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {currentOfficersPage.map((officer) => {
+              const isIpnu = officer.organization === 'IPNU';
+              const badgeColor = isIpnu
+                ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                : 'bg-green-100 text-green-800 border-green-200';
+
+              return (
+                <div
+                  key={officer.id}
+                  onClick={() => setSelectedOfficer(officer)}
+                  className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between group cursor-pointer border-t-4 border-t-emerald-600"
+                >
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        {officer.avatar ? (
+                          <img
+                            src={officer.avatar}
+                            alt={officer.fullName}
+                            className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500/20 shadow-xs group-hover:scale-105 transition"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 rounded-2xl bg-emerald-50 border-2 border-emerald-500/20 flex items-center justify-center text-emerald-700 font-bold text-xl group-hover:scale-105 transition">
+                            {officer.fullName.charAt(0)}
+                          </div>
+                        )}
+                        <span
+                          className={`absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded text-[9px] font-black uppercase border ${badgeColor}`}
+                        >
+                          {officer.organization}
+                        </span>
                       </div>
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-1">
-                        {officer.fullName}
-                      </h3>
-                      {officer.nia && (
-                        <div className="text-[10px] font-mono text-slate-400 mt-0.5">
-                          NIA: {officer.nia}
+
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">
+                          {officer.position}
                         </div>
-                      )}
+                        <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-1">
+                          {officer.fullName}
+                        </h3>
+                        {officer.nia && (
+                          <div className="text-[10px] font-mono text-slate-400 mt-0.5">
+                            NIA: {officer.nia}
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    {officer.description && (
+                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                        {officer.description}
+                      </p>
+                    )}
                   </div>
 
-                  {officer.description && (
-                    <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                      {officer.description}
-                    </p>
-                  )}
+                  <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span className="text-[11px] font-medium text-slate-400">
+                      Badan Pengurus Harian
+                    </span>
+                    <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 group-hover:translate-x-1 transition">
+                      <span>Detail</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </span>
+                  </div>
                 </div>
+              );
+            })}
+          </div>
 
-                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                  <span className="text-[11px] font-medium text-slate-400">
-                    Badan Pengurus Harian
-                  </span>
-                  <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 group-hover:translate-x-1 transition">
-                    <span>Detail</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+          {totalOfficerPages > 1 && (
+            <div className="flex items-center justify-center gap-1.5 pt-2">
+              {Array.from({ length: totalOfficerPages }).map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setOfficersSlideIndex(idx)}
+                  className={`h-2 rounded-full transition-all cursor-pointer ${
+                    idx === officersSlideIndex ? 'w-6 bg-emerald-600' : 'w-2 bg-slate-300 hover:bg-slate-400'
+                  }`}
+                  aria-label={`Halaman ${idx + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 

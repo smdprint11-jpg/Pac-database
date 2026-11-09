@@ -61,9 +61,9 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenLogin, onGoToDashboard }) 
       hasDropdown: true,
       subItems: [
         { label: 'Profil & Sejarah PAC', href: '#profil', icon: <BookOpen className="w-3.5 h-3.5 text-emerald-600" /> },
-        { label: 'Database Ketua IPNU & IPPNU', href: '#ketua-ipnu-ippnu', icon: <Award className="w-3.5 h-3.5 text-amber-600" /> },
-        { label: 'Database Dewan Pembina', href: '#pembina', icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" /> },
-        { label: 'Database Majelis Alumni', href: '#alumni', icon: <Users className="w-3.5 h-3.5 text-blue-600" /> },
+        { label: 'Foto dan Data Ketua IPNU IPPNU', href: '#ketua-ipnu-ippnu', icon: <Award className="w-3.5 h-3.5 text-amber-600" /> },
+        { label: 'Dewan Pembina', href: '#pembina', icon: <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" /> },
+        { label: 'Majelis Alumni', href: '#alumni', icon: <Users className="w-3.5 h-3.5 text-blue-600" /> },
       ],
     },
     { name: 'Kepengurusan', href: '#pengurus' },

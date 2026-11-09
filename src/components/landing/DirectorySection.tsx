@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Modal } from '../common/Modal';
 import { getGradeBadgeColor, getActiveStatusBadge } from '../../utils/scoring';
@@ -17,6 +17,9 @@ import {
   Phone,
   Mail,
   ChevronRight,
+  ChevronLeft,
+  Play,
+  Pause,
 } from 'lucide-react';
 
 export const DirectorySection: React.FC = () => {
@@ -38,6 +41,32 @@ export const DirectorySection: React.FC = () => {
 
     return matchesSearch && matchesType && matchesStatus;
   });
+
+  // 4 items visible per slide, rest accessible via slideshow
+  const ITEMS_PER_SLIDE = 4;
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  const totalPages = Math.ceil(filteredUnits.length / ITEMS_PER_SLIDE) || 1;
+
+  // Reset slide index when filters change
+  useEffect(() => {
+    setCurrentSlideIndex(0);
+  }, [searchQuery, selectedType, statusFilter]);
+
+  // Automatic slideshow
+  useEffect(() => {
+    if (isPaused || totalPages <= 1) return;
+    const timer = setInterval(() => {
+      setCurrentSlideIndex((prev) => (prev + 1) % totalPages);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [isPaused, totalPages]);
+
+  const displayedUnits = filteredUnits.slice(
+    currentSlideIndex * ITEMS_PER_SLIDE,
+    (currentSlideIndex + 1) * ITEMS_PER_SLIDE
+  );
 
   return (
     <section id="ranting-pk" className="py-20 bg-slate-50 border-b border-slate-200/60">
@@ -117,9 +146,54 @@ export const DirectorySection: React.FC = () => {
           </div>
         </div>
 
-        {/* Directory Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredUnits.map((unit) => {
+        {/* Slideshow Bar & Info */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-2 border-b border-slate-200/80">
+          <div>
+            <span className="text-xs font-bold text-slate-800">
+              Menampilkan 4 Pangkalan per Slide
+            </span>
+            <span className="text-xs text-slate-500 ml-2">
+              (Halaman {currentSlideIndex + 1} dari {totalPages} • Total {filteredUnits.length} Ranting & PK)
+            </span>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setIsPaused(!isPaused)}
+                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+                title={isPaused ? 'Putar Slideshow Otomatis' : 'Jeda Slideshow'}
+              >
+                {isPaused ? <Play className="w-4 h-4 text-emerald-600" /> : <Pause className="w-4 h-4 text-slate-600" />}
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + totalPages) % totalPages)}
+                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+                title="Slide Sebelumnya"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % totalPages)}
+                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+                title="Slide Berikutnya"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Directory Grid: 4 items per slide */}
+        <div
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+        >
+          {displayedUnits.map((unit) => {
             const gradeStyle = getGradeBadgeColor(unit.completenessGrade);
             const statusStyle = getActiveStatusBadge(unit.activeStatus);
             const isRanting = unit.type === 'RANTING';
@@ -128,7 +202,7 @@ export const DirectorySection: React.FC = () => {
               <div
                 key={unit.id}
                 onClick={() => setSelectedUnit(unit)}
-                className="bg-white rounded-2xl border border-slate-200/80 hover:border-emerald-300 p-6 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                className="bg-white rounded-2xl border border-slate-200/80 hover:border-emerald-300 p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
               >
                 <div>
                   {/* Top Bar with Badges */}
@@ -140,18 +214,18 @@ export const DirectorySection: React.FC = () => {
                         }`}
                       >
                         {isRanting ? (
-                          <Building2 className="w-4 h-4" />
+                          <Building2 className="w-3.5 h-3.5" />
                         ) : (
-                          <School className="w-4 h-4" />
+                          <School className="w-3.5 h-3.5" />
                         )}
                       </div>
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                         {unit.type}
                       </span>
                     </div>
 
                     <div
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dotColor}`} />
                       <span>{statusStyle.label}</span>
@@ -159,72 +233,72 @@ export const DirectorySection: React.FC = () => {
                   </div>
 
                   {/* Title & Village */}
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug mb-1">
+                  <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug mb-1 line-clamp-1">
                     {unit.name}
                   </h3>
-                  <div className="text-xs text-slate-500 flex items-center gap-1.5 mb-4">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{unit.villageOrSchool}</span>
+                  <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mb-3">
+                    <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                    <span className="truncate">{unit.villageOrSchool}</span>
                   </div>
 
                   {/* Leaders */}
-                  <div className="space-y-1.5 text-xs text-slate-700 bg-slate-50 p-3 rounded-xl mb-4 border border-slate-100">
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">Ketua IPNU:</span>
-                      <span className="font-semibold text-slate-900 truncate max-w-[170px]">
+                  <div className="space-y-1 text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl mb-3 border border-slate-100">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium">IPNU:</span>
+                      <span className="font-semibold text-slate-900 truncate max-w-[130px]">
                         {unit.leaderIpnu || '-'}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-500 font-medium">Ketua IPPNU:</span>
-                      <span className="font-semibold text-slate-900 truncate max-w-[170px]">
+                    <div className="flex justify-between items-center text-[11px]">
+                      <span className="text-slate-500 font-medium">IPPNU:</span>
+                      <span className="font-semibold text-slate-900 truncate max-w-[130px]">
                         {unit.leaderIppnu || '-'}
                       </span>
                     </div>
                   </div>
 
                   {/* Completeness Score Bar */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between text-xs mb-1.5">
-                      <span className="font-semibold text-slate-700">Kelengkapan Database:</span>
+                  <div className="mb-3">
+                    <div className="flex items-center justify-between text-[11px] mb-1">
+                      <span className="font-semibold text-slate-700">Database:</span>
                       <span className="font-extrabold text-emerald-800">
                         {unit.completenessScore}%
                       </span>
                     </div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${gradeStyle.barColor}`}
                         style={{ width: `${unit.completenessScore}%` }}
                       />
                     </div>
-                    <div className="flex justify-between items-center mt-1.5">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${gradeStyle.bg} ${gradeStyle.text} ${gradeStyle.border}`}>
-                        Kategori: {unit.completenessGrade}
+                    <div className="flex justify-between items-center mt-1">
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${gradeStyle.bg} ${gradeStyle.text} ${gradeStyle.border}`}>
+                        Grade {unit.completenessGrade}
                       </span>
-                      <span className="text-[10px] text-slate-400">
-                        Update: {unit.lastUpdated}
+                      <span className="text-[9px] text-slate-400">
+                        {unit.lastUpdated}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Footer Count stats */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-600">
-                  <div className="flex items-center gap-3">
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
+                  <div className="flex items-center gap-2">
                     <span title="Jumlah Anggota" className="flex items-center gap-1">
-                      <Users className="w-3.5 h-3.5 text-slate-400" />
-                      <strong className="text-slate-900">{unit.membersCount}</strong> kader
+                      <Users className="w-3 h-3 text-slate-400" />
+                      <strong className="text-slate-900">{unit.membersCount}</strong>
                     </span>
-                    <span title="Dokumen SP" className="flex items-center gap-1">
-                      <FileText className="w-3.5 h-3.5 text-slate-400" />
-                      <strong className="text-slate-900">
-                        {unit.spIpnuStatus === 'AKTIF' ? 'SP Sah' : 'SP Menunggu'}
+                    <span>•</span>
+                    <span title="Dokumen SP">
+                      <strong className={unit.spIpnuStatus === 'AKTIF' ? 'text-emerald-700' : 'text-amber-700'}>
+                        {unit.spIpnuStatus === 'AKTIF' ? 'SP Sah' : 'Proses'}
                       </strong>
                     </span>
                   </div>
 
-                  <div className="text-emerald-700 font-semibold group-hover:translate-x-1 transition flex items-center gap-0.5">
-                    <span>Lihat Detail</span>
+                  <div className="text-emerald-700 font-semibold group-hover:translate-x-1 transition flex items-center gap-0.5 text-xs">
+                    <span>Detail</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </div>
                 </div>
@@ -232,6 +306,22 @@ export const DirectorySection: React.FC = () => {
             );
           })}
         </div>
+
+        {/* Dots Navigation */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-1.5 pt-6">
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlideIndex(idx)}
+                className={`h-2 rounded-full transition-all cursor-pointer ${
+                  idx === currentSlideIndex ? 'w-6 bg-emerald-600' : 'w-2 bg-slate-300 hover:bg-slate-400'
+                }`}
+                aria-label={`Pindah ke slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
 
         {filteredUnits.length === 0 && (
           <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">

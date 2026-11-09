@@ -128,36 +128,36 @@ export const GallerySection: React.FC = () => {
           </div>
         </div>
 
-        {/* SINGLE ROW SLIDESHOW CONTAINER */}
+        {/* SINGLE ROW SLIDESHOW CONTAINER (COMPACT 4 SLIDES) */}
         <div
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="relative rounded-3xl p-2 sm:p-4 bg-white border border-slate-200/80 shadow-xs"
+          className="relative rounded-2xl p-2.5 sm:p-3.5 bg-white border border-slate-200/80 shadow-xs"
         >
           {allPhotos.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {visiblePhotos.slice(0, 4).map((item, idx) => (
                 <div
                   key={`${item.originalIndex}-${idx}`}
                   onClick={() => setSelectedPhoto(item)}
-                  className="group relative aspect-[4/3] rounded-2xl overflow-hidden bg-slate-900 cursor-pointer shadow-xs hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
+                  className="group relative aspect-[16/10] rounded-xl overflow-hidden bg-slate-900 cursor-pointer shadow-xs hover:shadow-lg transition-all duration-300 transform hover:-translate-y-0.5"
                 >
                   <img
                     src={item.url}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition duration-700"
+                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/25 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4 text-white">
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end p-2.5 text-white">
                     {item.category && (
-                      <span className="self-start px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-600/90 text-white mb-1 shadow-xs">
+                      <span className="self-start px-1.5 py-0.5 rounded text-[8px] font-bold bg-emerald-600/90 text-white mb-0.5 shadow-xs">
                         {item.category}
                       </span>
                     )}
-                    <div className="text-xs font-bold line-clamp-1">{item.title}</div>
-                    <div className="text-[10px] text-emerald-300 mt-0.5 line-clamp-1">{item.organizer}</div>
-                    <div className="mt-2 flex items-center gap-1 text-[10px] text-white/90">
-                      <ZoomIn className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Klik untuk memperbesar</span>
+                    <div className="text-[11px] font-bold line-clamp-1">{item.title}</div>
+                    <div className="text-[9px] text-emerald-300 mt-0.5 line-clamp-1">{item.organizer}</div>
+                    <div className="mt-1 flex items-center gap-1 text-[9px] text-white/90">
+                      <ZoomIn className="w-3 h-3 text-emerald-400" />
+                      <span>Perbesar foto</span>
                     </div>
                   </div>
                 </div>
