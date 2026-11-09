@@ -1,0 +1,6 @@
+{
+  "name": "PELAJAR NU DUKUN",
+  "description": "Sistem Informasi dan Database Organisasi PAC IPNU IPPNU Kecamatan Dukun",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
