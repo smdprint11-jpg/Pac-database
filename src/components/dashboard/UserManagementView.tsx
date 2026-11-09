@@ -17,10 +17,13 @@ import {
   XCircle,
   Key,
   Calendar,
+  Eye,
+  EyeOff,
+  RefreshCw,
 } from 'lucide-react';
 
 export const UserManagementView: React.FC = () => {
-  const { users, units, addUser, updateUser, deleteUser, showToast } = useApp();
+  const { users, units, addUser, updateUser, deleteUser, changeUserPassword, showToast } = useApp();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<'ALL' | UserRole>('ALL');
@@ -30,6 +33,12 @@ export const UserManagementView: React.FC = () => {
   const [selectedUser, setSelectedUser] = useState<UserAccount | null>(null);
   const [deleteUserId, setDeleteUserId] = useState<string | null>(null);
 
+  // Change Password Modal
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [passwordTargetUser, setPasswordTargetUser] = useState<UserAccount | null>(null);
+  const [newPasswordValue, setNewPasswordValue] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
   // Form state
   const [formData, setFormData] = useState({
     username: '',
@@ -38,6 +47,7 @@ export const UserManagementView: React.FC = () => {
     targetUnitId: units[0]?.id || '',
     email: '',
     phone: '',
+    password: '',
     isActive: true,
   });
 
@@ -60,6 +70,7 @@ export const UserManagementView: React.FC = () => {
       targetUnitId: units[0]?.id || '',
       email: '',
       phone: '',
+      password: 'pelajar' + Math.floor(100 + Math.random() * 900),
       isActive: true,
     });
     setIsModalOpen(true);
@@ -74,9 +85,35 @@ export const UserManagementView: React.FC = () => {
       targetUnitId: user.targetUnitId || units[0]?.id || '',
       email: user.email || '',
       phone: user.phone || '',
+      password: user.password || '',
       isActive: user.isActive,
     });
     setIsModalOpen(true);
+  };
+
+  const handleOpenPasswordModal = (user: UserAccount) => {
+    setPasswordTargetUser(user);
+    setNewPasswordValue('');
+    setShowPassword(false);
+    setIsPasswordModalOpen(true);
+  };
+
+  const handleSavePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordTargetUser) return;
+    if (!newPasswordValue.trim() || newPasswordValue.length < 4) {
+      showToast('Kata sandi minimal 4 karakter', 'warning');
+      return;
+    }
+    changeUserPassword(passwordTargetUser.id, newPasswordValue.trim());
+    setIsPasswordModalOpen(false);
+  };
+
+  const generateRandomPassword = () => {
+    const prefixes = ['pac', 'ranting', 'santri', 'nu', 'pelajar'];
+    const randPrefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+    const randNum = Math.floor(1000 + Math.random() * 9000);
+    setNewPasswordValue(`${randPrefix}${randNum}`);
   };
 
   const handleSave = (e: React.FormEvent) => {
@@ -223,14 +260,23 @@ export const UserManagementView: React.FC = () => {
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1">
                         <button
+                          onClick={() => handleOpenPasswordModal(user)}
+                          className="p-1.5 rounded-lg text-amber-600 hover:bg-amber-50 transition cursor-pointer"
+                          title="Ubah Kata Sandi (Password)"
+                        >
+                          <Key className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleOpenEdit(user)}
-                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition"
+                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                          title="Edit Akun"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setDeleteUserId(user.id)}
-                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
+                          className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition cursor-pointer"
+                          title="Hapus Akun"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -327,19 +373,110 @@ export const UserManagementView: React.FC = () => {
             />
           </div>
 
+          <div>
+            <label className="block text-xs font-semibold text-slate-700 mb-1">
+              Kata Sandi (Password) Akun *
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required={!selectedUser}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder={selectedUser ? 'Biarkan kosong jika tidak diubah' : 'Minimal 4 karakter...'}
+                className="w-full pl-3 pr-10 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1">
+              Dapat digunakan operator pangkalan untuk login ke sistem.
+            </p>
+          </div>
+
           <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
             <button
               type="button"
               onClick={() => setIsModalOpen(false)}
-              className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+              className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
             >
               Batal
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs"
+              className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs cursor-pointer"
             >
               Simpan Akun
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Modal Ubah Kata Sandi */}
+      <Modal
+        isOpen={isPasswordModalOpen}
+        onClose={() => setIsPasswordModalOpen(false)}
+        title="Ubah Kata Sandi Pengguna"
+        subtitle={passwordTargetUser ? `${passwordTargetUser.fullName} (@${passwordTargetUser.username})` : ''}
+        maxWidth="md"
+      >
+        <form onSubmit={handleSavePassword} className="space-y-4">
+          <div className="p-3 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 text-xs leading-relaxed">
+            Admin PAC dapat menyetel ulang kata sandi baru untuk akun Admin, Ranting, atau Komisariat.
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-xs font-bold text-slate-700">
+                Kata Sandi Baru *
+              </label>
+              <button
+                type="button"
+                onClick={generateRandomPassword}
+                className="text-[11px] font-semibold text-emerald-700 hover:text-emerald-800 flex items-center gap-1 cursor-pointer"
+              >
+                <RefreshCw className="w-3 h-3" />
+                <span>Acak Sandi</span>
+              </button>
+            </div>
+
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={newPasswordValue}
+                onChange={(e) => setNewPasswordValue(e.target.value)}
+                placeholder="Masukkan kata sandi baru..."
+                className="w-full pl-3 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-200 flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setIsPasswordModalOpen(false)}
+              className="px-4 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs cursor-pointer"
+            >
+              Simpan Kata Sandi Baru
             </button>
           </div>
         </form>

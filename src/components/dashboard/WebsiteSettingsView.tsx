@@ -23,6 +23,8 @@ import {
   Upload,
   X,
   ExternalLink,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react';
 
 export const WebsiteSettingsView: React.FC = () => {
@@ -38,8 +40,16 @@ export const WebsiteSettingsView: React.FC = () => {
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
-    'content' | 'slides' | 'pac_slider' | 'footer' | 'gallery' | 'social' | 'danger'
+    'content' | 'logo' | 'slides' | 'pac_slider' | 'footer' | 'gallery' | 'social' | 'danger'
   >('content');
+
+  // Logo & Branding Navigasi Form
+  const [logoForm, setLogoForm] = useState({
+    navbarLogoUrl: settings.navbarLogoUrl || '',
+    navbarBrandTitle: settings.navbarBrandTitle || settings.siteName || 'PELAJAR NU DUKUN',
+    navbarBrandSubtitle: settings.navbarBrandSubtitle || settings.organization || 'PAC IPNU IPPNU DUKUN',
+  });
+  const navLogoInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
   const [contentForm, setContentForm] = useState({
@@ -246,6 +256,102 @@ export const WebsiteSettingsView: React.FC = () => {
     showToast('Foto pengurus dihapus dari slider', 'info');
   };
 
+  // Handlers for Navigation Logo & Branding
+  const handleNavLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        showToast('Ukuran logo maksimal 2MB', 'warning');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoForm((prev) => ({ ...prev, navbarLogoUrl: reader.result as string }));
+        showToast('Logo bilah navigasi berhasil diunggah', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSaveLogoSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettings({
+      navbarLogoUrl: logoForm.navbarLogoUrl,
+      navbarBrandTitle: logoForm.navbarBrandTitle,
+      navbarBrandSubtitle: logoForm.navbarBrandSubtitle,
+    });
+    showToast('Pengaturan logo dan navigasi berhasil disimpan', 'success');
+  };
+
+  // Reordering helpers (Pengaturan Urutan Tampilan CMS)
+  const handleMoveSlideUp = (idx: number) => {
+    if (idx <= 0) return;
+    const reordered = [...slides];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[idx - 1];
+    reordered[idx - 1] = temp;
+    reordered.forEach((s, i) => {
+      updateSlide(s.id, { orderIndex: i + 1 });
+    });
+    showToast('Urutan slide berhasil dinaikkan', 'success');
+  };
+
+  const handleMoveSlideDown = (idx: number) => {
+    if (idx >= slides.length - 1) return;
+    const reordered = [...slides];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[idx + 1];
+    reordered[idx + 1] = temp;
+    reordered.forEach((s, i) => {
+      updateSlide(s.id, { orderIndex: i + 1 });
+    });
+    showToast('Urutan slide berhasil diturunkan', 'success');
+  };
+
+  const handleMovePacSlideUp = (idx: number) => {
+    if (idx <= 0) return;
+    const reordered = [...pacSliderList];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[idx - 1];
+    reordered[idx - 1] = temp;
+    setPacSliderList(reordered);
+    updateSettings({ pacOfficersSlider: reordered });
+    showToast('Urutan foto pengurus dinaikkan', 'success');
+  };
+
+  const handleMovePacSlideDown = (idx: number) => {
+    if (idx >= pacSliderList.length - 1) return;
+    const reordered = [...pacSliderList];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[idx + 1];
+    reordered[idx + 1] = temp;
+    setPacSliderList(reordered);
+    updateSettings({ pacOfficersSlider: reordered });
+    showToast('Urutan foto pengurus diturunkan', 'success');
+  };
+
+  const handleMoveNavLinkUp = (idx: number) => {
+    if (idx <= 0) return;
+    const reordered = [...footerForm.footerNavLinks];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[idx - 1];
+    reordered[idx - 1] = temp;
+    setFooterForm((prev) => ({ ...prev, footerNavLinks: reordered }));
+    updateSettings({ footerNavLinks: reordered });
+    showToast('Urutan tautan catatan kaki dinaikkan', 'success');
+  };
+
+  const handleMoveNavLinkDown = (idx: number) => {
+    if (idx >= footerForm.footerNavLinks.length - 1) return;
+    const reordered = [...footerForm.footerNavLinks];
+    const temp = reordered[idx];
+    reordered[idx] = reordered[idx + 1];
+    reordered[idx + 1] = temp;
+    setFooterForm((prev) => ({ ...prev, footerNavLinks: reordered }));
+    updateSettings({ footerNavLinks: reordered });
+    showToast('Urutan tautan catatan kaki diturunkan', 'success');
+  };
+
   // Handlers for Galeri Kegiatan yang Terkumpul
   const handleOpenAddGallery = () => {
     setSelectedGalleryItem(null);
@@ -341,6 +447,18 @@ export const WebsiteSettingsView: React.FC = () => {
         >
           <Globe className="w-4 h-4" />
           <span>Edit Konten Utama</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('logo')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'logo'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <ImageIcon className="w-4 h-4" />
+          <span>Logo & Navigasi</span>
         </button>
 
         <button
@@ -539,6 +657,165 @@ export const WebsiteSettingsView: React.FC = () => {
         </form>
       )}
 
+      {/* Tab: Pengaturan Logo & Branding Navigasi */}
+      {activeTab === 'logo' && (
+        <form onSubmit={handleSaveLogoSettings} className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/80 shadow-xs space-y-6">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">
+              Pengaturan Logo & Branding Bilah Navigasi Utama
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Sesuaikan logo organisasi dan teks identitas yang muncul di bilah navigasi header website
+            </p>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-4">
+            <label className="block text-xs font-bold text-slate-800">
+              Logo Bilah Navigasi (Header)
+            </label>
+
+            <div className="flex items-center gap-5">
+              <div className="w-16 h-16 rounded-2xl border-2 border-dashed border-emerald-400 bg-white flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                {logoForm.navbarLogoUrl ? (
+                  <img
+                    src={logoForm.navbarLogoUrl}
+                    alt="Logo Navigasi"
+                    className="w-full h-full object-contain p-1"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-green-800 flex items-center justify-center text-white font-bold text-lg text-amber-300">
+                    NU
+                  </div>
+                )}
+              </div>
+
+              <div className="flex-1 space-y-2">
+                <input
+                  type="file"
+                  ref={navLogoInputRef}
+                  accept="image/*"
+                  onChange={handleNavLogoUpload}
+                  className="hidden"
+                />
+
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => navLogoInputRef.current?.click()}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                  >
+                    <Upload className="w-3.5 h-3.5" />
+                    <span>Upload Logo Baru</span>
+                  </button>
+
+                  {logoForm.navbarLogoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoForm({ ...logoForm, navbarLogoUrl: '' })}
+                      className="px-3.5 py-2 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Kembalikan ke Badge Default</span>
+                    </button>
+                  )}
+                </div>
+
+                <div className="text-[11px] text-slate-500">
+                  Format gambar PNG transparan atau JPG persegi disarankan (Maksimal 2MB).
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Atau Tautan URL Logo Eksternal:
+              </label>
+              <input
+                type="url"
+                value={logoForm.navbarLogoUrl}
+                onChange={(e) => setLogoForm({ ...logoForm, navbarLogoUrl: e.target.value })}
+                placeholder="https://..."
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 bg-white"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Judul Utama Navigasi *
+              </label>
+              <input
+                type="text"
+                required
+                value={logoForm.navbarBrandTitle}
+                onChange={(e) => setLogoForm({ ...logoForm, navbarBrandTitle: e.target.value })}
+                placeholder="PELAJAR NU DUKUN"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 font-bold"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                Subjudul Organisasi *
+              </label>
+              <input
+                type="text"
+                required
+                value={logoForm.navbarBrandSubtitle}
+                onChange={(e) => setLogoForm({ ...logoForm, navbarBrandSubtitle: e.target.value })}
+                placeholder="PAC IPNU IPPNU DUKUN"
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+          </div>
+
+          {/* Live Preview Header Card */}
+          <div className="p-4 rounded-2xl bg-slate-100 border border-slate-200 space-y-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+              Pratinjau Langsung Tampilan Navbar Header:
+            </span>
+            <div className="p-3 bg-white rounded-xl shadow-xs border border-emerald-100 flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                {logoForm.navbarLogoUrl ? (
+                  <img
+                    src={logoForm.navbarLogoUrl}
+                    alt="Logo"
+                    className="w-9 h-9 rounded-xl object-contain shadow-xs"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 to-green-800 flex items-center justify-center text-white font-bold text-sm text-amber-300">
+                    NU
+                  </div>
+                )}
+                <div className="flex flex-col">
+                  <span className="font-extrabold text-slate-900 text-sm">
+                    {logoForm.navbarBrandTitle}
+                  </span>
+                  <span className="text-[10px] font-semibold text-emerald-700 uppercase">
+                    {logoForm.navbarBrandSubtitle}
+                  </span>
+                </div>
+              </div>
+
+              <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold">
+                Aktif
+              </span>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-200 flex justify-end">
+            <button
+              type="submit"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <Save className="w-4 h-4" />
+              <span>Simpan Pengaturan Logo & Navigasi</span>
+            </button>
+          </div>
+        </form>
+      )}
+
       {/* Tab: Slide Bar (Hero Slider) */}
       {activeTab === 'slides' && (
         <div className="space-y-4">
@@ -564,8 +841,36 @@ export const WebsiteSettingsView: React.FC = () => {
                     <p className="text-xs text-slate-600 line-clamp-2 mt-1">{s.description}</p>
                   </div>
                 </div>
-                <div className="p-4 pt-0 text-[11px] text-slate-400">
-                  Tombol: <span className="font-semibold text-slate-700">{s.buttonText}</span> ({s.buttonLink})
+                <div className="p-4 pt-0 space-y-2">
+                  <div className="text-[11px] text-slate-400">
+                    Tombol: <span className="font-semibold text-slate-700">{s.buttonText}</span> ({s.buttonLink})
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        disabled={idx === 0}
+                        onClick={() => handleMoveSlideUp(idx)}
+                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 cursor-pointer"
+                        title="Geser Urutan ke Atas"
+                      >
+                        <ArrowUp className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={idx === slides.length - 1}
+                        onClick={() => handleMoveSlideDown(idx)}
+                        className="p-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 cursor-pointer"
+                        title="Geser Urutan ke Bawah"
+                      >
+                        <ArrowDown className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400">
+                      Posisi Urutan #{idx + 1}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
@@ -595,7 +900,7 @@ export const WebsiteSettingsView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {pacSliderList.map((item) => (
+            {pacSliderList.map((item, idx) => (
               <div
                 key={item.id}
                 className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex flex-col justify-between space-y-3 hover:shadow-md transition"
@@ -622,21 +927,45 @@ export const WebsiteSettingsView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => handleOpenEditPacSlide(item)}
-                    className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition cursor-pointer"
-                    title="Edit Slide Pengurus"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => handleDeletePacSlide(item.id)}
-                    className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition cursor-pointer"
-                    title="Hapus Slide Pengurus"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-1">
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => handleMovePacSlideUp(idx)}
+                      className="p-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 cursor-pointer"
+                      title="Geser Urutan ke Depan / Atas"
+                    >
+                      <ArrowUp className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === pacSliderList.length - 1}
+                      onClick={() => handleMovePacSlideDown(idx)}
+                      className="p-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 cursor-pointer"
+                      title="Geser Urutan ke Belakang / Bawah"
+                    >
+                      <ArrowDown className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="text-[10px] font-mono font-bold text-slate-400 ml-1">#{idx + 1}</span>
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => handleOpenEditPacSlide(item)}
+                      className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition cursor-pointer"
+                      title="Edit Slide Pengurus"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePacSlide(item.id)}
+                      className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition cursor-pointer"
+                      title="Hapus Slide Pengurus"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -718,14 +1047,35 @@ export const WebsiteSettingsView: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              {footerForm.footerNavLinks.map((link) => (
+              {footerForm.footerNavLinks.map((link, idx) => (
                 <div key={link.id} className="flex items-center gap-3 p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs">
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      disabled={idx === 0}
+                      onClick={() => handleMoveNavLinkUp(idx)}
+                      className="p-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 cursor-pointer"
+                      title="Geser Tautan ke Atas"
+                    >
+                      <ArrowUp className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      disabled={idx === footerForm.footerNavLinks.length - 1}
+                      onClick={() => handleMoveNavLinkDown(idx)}
+                      className="p-1 rounded-md border border-slate-200 bg-white hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed text-slate-700 cursor-pointer"
+                      title="Geser Tautan ke Bawah"
+                    >
+                      <ArrowDown className="w-3 h-3" />
+                    </button>
+                    <span className="text-[10px] font-mono font-bold text-slate-400 ml-0.5">#{idx + 1}</span>
+                  </div>
                   <div className="flex-1 font-bold text-slate-800">{link.label}</div>
                   <div className="font-mono text-emerald-700 text-[11px] truncate max-w-[200px]">{link.url}</div>
                   <button
                     type="button"
                     onClick={() => handleRemoveFooterNavLink(link.id)}
-                    className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition"
+                    className="p-1 text-red-500 hover:bg-red-50 rounded-lg transition cursor-pointer"
                     title="Hapus Link"
                   >
                     <Trash2 className="w-4 h-4" />

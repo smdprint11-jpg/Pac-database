@@ -59,6 +59,16 @@ export const LeadershipSection: React.FC = () => {
       ];
 
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Automatic slideshow for PAC Leadership Carousel
+  useEffect(() => {
+    if (isPaused || pacSlides.length <= 1) return;
+    const timer = setInterval(() => {
+      setActiveSlideIndex((prev) => (prev + 1) % pacSlides.length);
+    }, 3600);
+    return () => clearInterval(timer);
+  }, [isPaused, pacSlides.length]);
 
   const handleNextSlide = () => {
     setActiveSlideIndex((prev) => (prev + 1) % pacSlides.length);
@@ -131,9 +141,13 @@ export const LeadershipSection: React.FC = () => {
           </div>
         </div>
 
-        {/* SLIDER BAR FOTO PENGURUS PAC (Interactive Carousel) */}
+        {/* SLIDER BAR FOTO PENGURUS PAC (Interactive Carousel with Auto-Slideshow) */}
         {pacSlides.length > 0 && (
-          <div className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+          <div
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            className="bg-gradient-to-r from-emerald-900 via-emerald-800 to-green-950 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden"
+          >
             {/* Background Decorative Rings */}
             <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />

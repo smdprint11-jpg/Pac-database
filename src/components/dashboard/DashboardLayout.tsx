@@ -83,15 +83,9 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onBackToLandin
     },
     {
       id: 'branches',
-      label: isBranchUser ? 'Profil Organisasi' : 'Database Ranting',
+      label: isBranchUser ? 'Profil Organisasi' : 'Database Ranting & PK',
       icon: <Building2 className="w-4 h-4" />,
       allowed: true,
-    },
-    {
-      id: 'pk-units',
-      label: 'Database Komisariat (PK)',
-      icon: <School className="w-4 h-4" />,
-      allowed: isAdmin,
     },
     {
       id: 'members',

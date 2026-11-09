@@ -36,6 +36,7 @@ export interface UserAccount {
   email?: string;
   phone?: string;
   avatar?: string;
+  password?: string; // Encrypted or plain stored password for simulation
   isActive: boolean;
   createdAt: string;
   lastLogin?: string;
@@ -253,6 +254,18 @@ export interface HeroSlide {
   orderIndex?: number;
 }
 
+export interface HistoricalLeader {
+  id: string;
+  name: string;
+  period: string; // e.g. "2024 - 2026"
+  organization: 'IPNU' | 'IPPNU';
+  photo?: string;
+  visionOrQuote?: string;
+  achievements?: string[];
+  status: 'Aktif' | 'Demisioner';
+  originUnit?: string;
+}
+
 export interface WebsiteSettings {
   siteTitle?: string;
   siteName: string;
@@ -261,6 +274,9 @@ export interface WebsiteSettings {
   organizationName?: string;
   organization: string;
   logoUrl?: string;
+  navbarLogoUrl?: string;
+  navbarBrandTitle?: string;
+  navbarBrandSubtitle?: string;
   faviconUrl?: string;
   themeColor?: string;
   shortDescription?: string;
@@ -299,6 +315,8 @@ export interface WebsiteSettings {
   footerNavLinks: FooterNavLink[];
   pacOfficersSlider: PacOfficerSlide[];
   activityGallery: ActivityGalleryItem[];
+  historicalLeaders?: HistoricalLeader[];
+  sectionOrder?: string[];
 }
 
 export interface ActivityLog {
