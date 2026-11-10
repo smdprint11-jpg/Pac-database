@@ -19,7 +19,7 @@ interface LoginModalProps {
 }
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
-  const { login, users, units, settings } = useApp();
+  const { login, loginWithGoogle, users, units, settings } = useApp();
   const [loginType, setLoginType] = useState<'PAC' | 'BRANCH'>('PAC');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -27,8 +27,20 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
   const [selectedUnitId, setSelectedUnitId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const appLogo = settings.navbarLogoUrl || settings.logoUrl;
+
+  const handleGoogleSignIn = async () => {
+    setErrorMsg('');
+    setIsGoogleLoading(true);
+    const ok = await loginWithGoogle();
+    setIsGoogleLoading(false);
+    if (ok) {
+      onClose();
+      onSuccess();
+    }
+  };
 
   const handleSelectUnit = (unitId: string) => {
     setSelectedUnitId(unitId);
@@ -250,7 +262,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isGoogleLoading}
             className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-500 text-white font-bold rounded-xl text-xs shadow-sm transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer mt-2 active:scale-[0.99]"
           >
             {isSubmitting ? (
@@ -263,6 +275,25 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
                 <span>Masuk ke Dashboard {loginType === 'PAC' ? 'Admin PAC' : 'Ranting / PK'}</span>
                 <ArrowRight className="w-4 h-4" />
               </>
+            )}
+          </button>
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-slate-200" />
+            <span className="shrink mx-2 text-[10px] font-semibold text-slate-400 uppercase">Atau</span>
+            <div className="flex-grow border-t border-slate-200" />
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGoogleSignIn}
+            disabled={isSubmitting || isGoogleLoading}
+            className="w-full py-2 px-4 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-semibold rounded-xl text-xs transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            {isGoogleLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+            ) : (
+              <span>Masuk dengan Akun Google Resmi</span>
             )}
           </button>
         </form>

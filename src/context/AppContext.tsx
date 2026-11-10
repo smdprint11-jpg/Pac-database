@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { signInWithPopup, signOut } from 'firebase/auth';
+import { auth, googleAuthProvider, setAuthToken, getValidAuthToken } from '../lib/firebase';
 import {
   WebsiteSettings,
   HeroSlide,
@@ -63,6 +65,7 @@ interface AppContextType {
 
   // Auth
   login: (username: string, password?: string) => boolean;
+  loginWithGoogle: () => Promise<boolean>;
   quickLogin: (userId: string) => void;
   logout: () => void;
 
@@ -144,11 +147,33 @@ function loadStored<T>(key: string, fallback: T): T {
   }
 }
 
-function saveStored<T>(key: string, data: T): void {
+function saveStored<T>(key: string, data: T, syncToSql = true): void {
   try {
     localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
   } catch (err) {
     console.error('Storage write error:', err);
+  }
+
+  if (syncToSql && key !== 'currentUser') {
+    (async () => {
+      try {
+        const token = await getValidAuthToken();
+        const endpoint = token ? '/api/protected/state' : '/api/state';
+        const headers: Record<string, string> = {
+          'Content-Type': 'application/json',
+        };
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        await fetch(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ collectionKey: key, data }),
+        });
+      } catch {
+        // Fallback silently if offline
+      }
+    })();
   }
 }
 
@@ -247,21 +272,69 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => loadStored('currentUser', null));
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  // Sync to storage
-  useEffect(() => saveStored('settings', settings), [settings]);
-  useEffect(() => saveStored('slides', slides), [slides]);
-  useEffect(() => saveStored('units', units), [units]);
-  useEffect(() => saveStored('officers', officers), [officers]);
-  useEffect(() => saveStored('members', members), [members]);
-  useEffect(() => saveStored('supervisors', supervisors), [supervisors]);
-  useEffect(() => saveStored('alumni', alumni), [alumni]);
-  useEffect(() => saveStored('spDocs', spDocuments), [spDocuments]);
-  useEffect(() => saveStored('activities', activities), [activities]);
-  useEffect(() => saveStored('users', users), [users]);
-  useEffect(() => saveStored('logs', logs), [logs]);
-  useEffect(() => saveStored('notifications', notifications), [notifications]);
-  useEffect(() => saveStored('weights', weights), [weights]);
-  useEffect(() => saveStored('currentUser', currentUser), [currentUser]);
+  const isHydratingFromSql = useRef(false);
+
+  // Hydrate from Cloud SQL database on initial load
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch('/api/state');
+        if (!res.ok) return;
+        const payload = await res.json();
+        if (!mounted || !payload?.collections) return;
+        const cols = payload.collections;
+        isHydratingFromSql.current = true;
+
+        if (cols.settings) setSettings(cols.settings);
+        if (Array.isArray(cols.slides) && cols.slides.length > 0) setSlides(cols.slides);
+        if (Array.isArray(cols.units) && cols.units.length > 0) setUnits(cols.units);
+        if (Array.isArray(cols.officers) && cols.officers.length > 0) {
+          setOfficers((cols.officers as Officer[]).map(normalizeOfficer));
+        }
+        if (Array.isArray(cols.members) && cols.members.length > 0) {
+          setMembers((cols.members as Member[]).map(normalizeMember));
+        }
+        if (Array.isArray(cols.supervisors) && cols.supervisors.length > 0) {
+          setSupervisors((cols.supervisors as Supervisor[]).map(normalizeSupervisor));
+        }
+        if (Array.isArray(cols.alumni) && cols.alumni.length > 0) {
+          setAlumni((cols.alumni as Alumni[]).map(normalizeAlumni));
+        }
+        if (Array.isArray(cols.spDocs) && cols.spDocs.length > 0) setSpDocuments(cols.spDocs);
+        if (Array.isArray(cols.activities) && cols.activities.length > 0) {
+          setActivities((cols.activities as Activity[]).map(normalizeActivity));
+        }
+        if (Array.isArray(cols.users) && cols.users.length > 0) setUsers(cols.users);
+        if (cols.weights) setWeights(cols.weights);
+
+        setTimeout(() => {
+          isHydratingFromSql.current = false;
+        }, 200);
+      } catch {
+        // Fallback to local state if backend is unreachable
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // Sync to storage & SQL database
+  useEffect(() => saveStored('settings', settings, !isHydratingFromSql.current), [settings]);
+  useEffect(() => saveStored('slides', slides, !isHydratingFromSql.current), [slides]);
+  useEffect(() => saveStored('units', units, !isHydratingFromSql.current), [units]);
+  useEffect(() => saveStored('officers', officers, !isHydratingFromSql.current), [officers]);
+  useEffect(() => saveStored('members', members, !isHydratingFromSql.current), [members]);
+  useEffect(() => saveStored('supervisors', supervisors, !isHydratingFromSql.current), [supervisors]);
+  useEffect(() => saveStored('alumni', alumni, !isHydratingFromSql.current), [alumni]);
+  useEffect(() => saveStored('spDocs', spDocuments, !isHydratingFromSql.current), [spDocuments]);
+  useEffect(() => saveStored('activities', activities, !isHydratingFromSql.current), [activities]);
+  useEffect(() => saveStored('users', users, !isHydratingFromSql.current), [users]);
+  useEffect(() => saveStored('logs', logs, !isHydratingFromSql.current), [logs]);
+  useEffect(() => saveStored('notifications', notifications, !isHydratingFromSql.current), [notifications]);
+  useEffect(() => saveStored('weights', weights, !isHydratingFromSql.current), [weights]);
+  useEffect(() => saveStored('currentUser', currentUser, false), [currentUser]);
 
   // Real-time Cross-Tab Synchronization via window storage event
   useEffect(() => {
@@ -514,6 +587,56 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return true;
   };
 
+  const loginWithGoogle = async (): Promise<boolean> => {
+    try {
+      const result = await signInWithPopup(auth, googleAuthProvider);
+      const fbUser = result.user;
+      const token = await fbUser.getIdToken();
+      setAuthToken(token);
+
+      await fetch('/api/auth/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          fullName: fbUser.displayName || fbUser.email || 'Pengurus Google',
+        }),
+      });
+
+      const emailLower = (fbUser.email || '').toLowerCase();
+      const matchedAccount = users.find(
+        (u) => u.email?.toLowerCase() === emailLower || u.role === 'super_admin'
+      );
+
+      const activeAccount: UserAccount = matchedAccount
+        ? {
+            ...matchedAccount,
+            lastLogin: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          }
+        : {
+            id: `fb-${fbUser.uid.slice(0, 8)}`,
+            username: emailLower.split('@')[0] || 'admin_google',
+            fullName: fbUser.displayName || 'Admin PAC (Google)',
+            email: fbUser.email || 'pac@pelajarnu.id',
+            role: 'admin_pac',
+            isActive: true,
+            createdAt: new Date().toISOString().split('T')[0],
+            lastLogin: new Date().toISOString().replace('T', ' ').substring(0, 16),
+          };
+
+      setCurrentUser(activeAccount);
+      logActivity('Login Google OAuth', activeAccount.fullName, `Masuk via Google (${fbUser.email})`);
+      showToast(`Selamat datang, ${activeAccount.fullName}!`, 'success');
+      return true;
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      showToast('Login Google dibatalkan atau gagal', 'warning');
+      return false;
+    }
+  };
+
   const quickLogin = (userId: string) => {
     const user = users.find((u) => u.id === userId);
     if (user) {
@@ -527,6 +650,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (currentUser) {
       logActivity('Logout Pengguna', currentUser.fullName, 'Keluar dari sesi');
     }
+    setAuthToken(null);
+    signOut(auth).catch(() => {});
     setCurrentUser(null);
     showToast('Anda telah berhasil keluar sistem', 'info');
   };
@@ -1449,6 +1574,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         currentUser,
         toasts,
         login,
+        loginWithGoogle,
         quickLogin,
         logout,
         updateSettings,

@@ -25,7 +25,11 @@ import {
   ExternalLink,
   ArrowUp,
   ArrowDown,
+  Database,
+  Download,
+  FileCode,
 } from 'lucide-react';
+import { generateMySqlDump } from '../../utils/phpMysqlExport';
 
 export const WebsiteSettingsView: React.FC = () => {
   const {
@@ -35,12 +39,19 @@ export const WebsiteSettingsView: React.FC = () => {
     addSlide,
     updateSlide,
     deleteSlide,
+    officers,
+    units,
+    members,
+    spDocuments,
+    activities,
+    supervisors,
+    alumni,
     resetDatabase,
     showToast,
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<
-    'content' | 'logo' | 'slides' | 'pac_slider' | 'footer' | 'gallery' | 'social' | 'danger'
+    'content' | 'logo' | 'slides' | 'pac_slider' | 'footer' | 'gallery' | 'social' | 'php_mysql' | 'danger'
   >('content');
 
   // Logo, Navigasi, Breadcrumb & Nama Menu Manajemen Form
@@ -719,6 +730,18 @@ export const WebsiteSettingsView: React.FC = () => {
         >
           <Share2 className="w-4 h-4" />
           <span>Media Sosial & WA</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('php_mysql')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'php_mysql'
+              ? 'bg-emerald-600 text-white shadow-xs'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Database className="w-4 h-4" />
+          <span>PHP & Database MySQL</span>
         </button>
 
         <button
@@ -2526,6 +2549,88 @@ export const WebsiteSettingsView: React.FC = () => {
             </button>
           </div>
         </form>
+      )}
+
+      {/* Tab: PHP & Database MySQL */}
+      {activeTab === 'php_mysql' && (
+        <div className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-xs space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+            <div>
+              <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <Database className="w-4 h-4 text-emerald-600" />
+                <span>Paket Integrasi PHP & Database MySQL</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Unduh file dump database MySQL (.sql) yang tersinkronisasi real-time beserta skrip koneksi PHP PDO (`config.php` & `api.php`)
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const sqlContent = generateMySqlDump({
+                    settings,
+                    officers,
+                    units,
+                    members,
+                    spDocuments,
+                    activities,
+                    supervisors,
+                    alumni,
+                  });
+                  const blob = new Blob([sqlContent], { type: 'application/sql;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `db_pelajar_nu_dukun_${new Date().toISOString().slice(0, 10)}.sql`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  showToast('File Database MySQL (.sql) berhasil diunduh', 'success');
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download Database MySQL (.sql)</span>
+              </button>
+
+              <a
+                href="/php-mysql/config.php"
+                download="config.php"
+                className="px-3.5 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 transition"
+              >
+                <FileCode className="w-4 h-4" />
+                <span>Unduh config.php</span>
+              </a>
+
+              <a
+                href="/php-mysql/api.php"
+                download="api.php"
+                className="px-3.5 py-2 rounded-xl border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1.5 transition"
+              >
+                <FileCode className="w-4 h-4" />
+                <span>Unduh api.php</span>
+              </a>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-slate-500 font-semibold block">Tabel Pengurus PAC & Unit (`pac_officers`)</span>
+              <strong className="text-lg font-black text-slate-900">{officers.length} Baris Data</strong>
+              <p className="text-[11px] text-slate-500">Termasuk seluruh Pengurus Harian PAC & Pengurus Ranting/PK</p>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-slate-500 font-semibold block">Tabel Ranting & Komisariat (`units`)</span>
+              <strong className="text-lg font-black text-slate-900">{units.length} Pangkalan</strong>
+              <p className="text-[11px] text-slate-500">18 Ranting Desa & 6 Komisariat beserta skor kelengkapan</p>
+            </div>
+            <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+              <span className="text-slate-500 font-semibold block">Tabel Anggota Kader (`members`)</span>
+              <strong className="text-lg font-black text-slate-900">{members.length} Kader Terdaftar</strong>
+              <p className="text-[11px] text-slate-500">Siap diimpor langsung ke phpMyAdmin / MySQL Server</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Tab: Danger Zone */}
