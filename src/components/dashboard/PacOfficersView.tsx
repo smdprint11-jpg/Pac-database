@@ -26,11 +26,28 @@ import {
 import { exportOfficersToPdf } from '../../utils/pdfExport';
 
 export const PacOfficersView: React.FC = () => {
-  const { officers, addOfficer, updateOfficer, deleteOfficer, showToast, settings, activities } = useApp();
+  const {
+    officers,
+    units,
+    currentUser,
+    addOfficer,
+    updateOfficer,
+    deleteOfficer,
+    showToast,
+    settings,
+    activities,
+  } = useApp();
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+
+  const isBranchUser = currentUser?.role === 'user_ranting' || currentUser?.role === 'user_pk';
+  const targetUnitId = currentUser?.targetUnitId || '';
+  const targetUnitName = currentUser?.targetUnitName || '';
 
   const [searchQuery, setSearchQuery] = useState('');
   const [orgFilter, setOrgFilter] = useState<'ALL' | OrganizationType>('ALL');
+  const [scopeFilter, setScopeFilter] = useState<string>(
+    isBranchUser && targetUnitId ? targetUnitId : 'PAC'
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedOfficer, setSelectedOfficer] = useState<Officer | null>(null);
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
@@ -45,18 +62,27 @@ export const PacOfficersView: React.FC = () => {
     position: '',
     department: 'Badan Pengurus Harian',
     organization: 'IPNU' as OrganizationType,
+    unitId: isBranchUser && targetUnitId ? targetUnitId : '',
+    unitName: isBranchUser && targetUnitName ? targetUnitName : '',
     phone: '',
     email: '',
     photoUrl: '',
-    period: '2024 - 2026',
+    period: settings.period || '2024 - 2026',
     status: 'Aktif' as 'Aktif' | 'Demisioner' | 'Nonaktif',
     bio: '',
     orderIndex: 1,
   });
 
-  const pacOfficers = officers.filter((o) => !o.unitId);
+  const scopedOfficers = officers.filter((o) => {
+    if (isBranchUser && targetUnitId) {
+      return o.unitId === targetUnitId;
+    }
+    if (scopeFilter === 'PAC') return !o.unitId;
+    if (scopeFilter === 'ALL_UNITS') return true;
+    return o.unitId === scopeFilter;
+  });
 
-  const filteredOfficers = pacOfficers.filter((o) => {
+  const filteredOfficers = scopedOfficers.filter((o) => {
     const matchesSearch =
       o.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (o.nia ? o.nia.toLowerCase().includes(searchQuery.toLowerCase()) : false) ||
@@ -69,20 +95,30 @@ export const PacOfficersView: React.FC = () => {
 
   const handleOpenAdd = () => {
     setSelectedOfficer(null);
+    const defaultUnitId =
+      isBranchUser && targetUnitId
+        ? targetUnitId
+        : scopeFilter !== 'PAC' && scopeFilter !== 'ALL_UNITS'
+        ? scopeFilter
+        : '';
+    const defaultUnitObj = units.find((u) => u.id === defaultUnitId);
+
     setFormData({
       fullName: '',
       nia: `35.25.04.2024.${Math.floor(10 + Math.random() * 90)}`,
       gender: 'L',
-      position: 'Koordinator Departemen',
-      department: 'Departemen Kaderisasi',
+      position: 'Ketua',
+      department: 'Badan Pengurus Harian',
       organization: 'IPNU',
+      unitId: defaultUnitId,
+      unitName: defaultUnitObj ? defaultUnitObj.name : '',
       phone: '081234567890',
       email: '',
       photoUrl: '',
-      period: '2024 - 2026',
+      period: settings.period || '2024 - 2026',
       status: 'Aktif',
       bio: '',
-      orderIndex: pacOfficers.length + 1,
+      orderIndex: scopedOfficers.length + 1,
     });
     setIsModalOpen(true);
   };
@@ -94,15 +130,17 @@ export const PacOfficersView: React.FC = () => {
       nia: officer.nia || '',
       gender: officer.gender || 'L',
       position: officer.position,
-      department: officer.department || '',
+      department: officer.department || 'Badan Pengurus Harian',
       organization: (officer.organization === 'IPPNU' ? 'IPPNU' : 'IPNU') as any,
+      unitId: officer.unitId || '',
+      unitName: officer.unitName || '',
       phone: officer.phone || '',
       email: officer.email || '',
       photoUrl: officer.photoUrl || officer.avatar || '',
-      period: officer.period,
+      period: officer.period || settings.period || '2024 - 2026',
       status: (officer.status as any) || 'Aktif',
       bio: officer.bio || officer.description || '',
-      orderIndex: officer.orderIndex || 1,
+      orderIndex: officer.orderIndex ?? officer.displayOrder ?? 1,
     });
     setIsModalOpen(true);
   };
@@ -159,10 +197,20 @@ export const PacOfficersView: React.FC = () => {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const assignedUnitId = isBranchUser && targetUnitId ? targetUnitId : formData.unitId;
+    const assignedUnitObj = units.find((u) => u.id === assignedUnitId);
+    const payload = {
+      ...formData,
+      unitId: assignedUnitId || undefined,
+      unitName: assignedUnitObj ? assignedUnitObj.name : undefined,
+      avatar: formData.photoUrl,
+      description: formData.bio,
+      displayOrder: formData.orderIndex,
+    };
     if (selectedOfficer) {
-      updateOfficer(selectedOfficer.id, formData as any);
+      updateOfficer(selectedOfficer.id, payload as any);
     } else {
-      addOfficer(formData as any);
+      addOfficer(payload as any);
     }
     setIsModalOpen(false);
   };
@@ -189,7 +237,7 @@ export const PacOfficersView: React.FC = () => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `Pengurus_PAC_IPNU_IPPNU_DUKUN_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Pengurus_IPNU_IPPNU_DUKUN_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -201,10 +249,14 @@ export const PacOfficersView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            Database Pengurus PAC IPNU IPPNU Dukun
+            {isBranchUser
+              ? `Database Pengurus ${targetUnitName || 'Ranting/PK'}`
+              : 'Database Pengurus PAC & Pangkalan IPNU IPPNU Dukun'}
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Daftar jajaran Pimpinan Harian, Departemen, dan Lembaga PAC Dukun Masa Khidmat 2024 - 2026
+            {isBranchUser
+              ? `Daftar susunan pengurus aktif ${targetUnitName} — tersinkronisasi otomatis ke Direktori & Profil`
+              : `Daftar jajaran Pimpinan Harian, Departemen, dan Lembaga (${settings.period || '2024 - 2026'}) — tersinkronisasi realtime ke seluruh halaman`}
           </p>
         </div>
 
@@ -215,13 +267,16 @@ export const PacOfficersView: React.FC = () => {
             onClick={async () => {
               try {
                 setIsExportingPdf(true);
-                showToast('Menyiapkan dokumen PDF beserta pas foto pengurus PAC...', 'info');
-                const scopeLabel =
-                  orgFilter === 'ALL'
-                    ? 'Seluruh Pengurus PAC IPNU & IPPNU Dukun'
-                    : `Pengurus PAC ${orgFilter} Kecamatan Dukun`;
+                showToast('Menyiapkan dokumen PDF beserta pas foto pengurus...', 'info');
+                const scopeLabel = isBranchUser
+                  ? `Pengurus ${targetUnitName}`
+                  : scopeFilter === 'PAC'
+                  ? 'Pengurus PAC IPNU & IPPNU Kecamatan Dukun'
+                  : scopeFilter === 'ALL_UNITS'
+                  ? 'Seluruh Pengurus PAC, Ranting & Komisariat se-Kecamatan Dukun'
+                  : `Pengurus ${units.find((u) => u.id === scopeFilter)?.name || ''}`;
                 await exportOfficersToPdf(filteredOfficers, settings, scopeLabel);
-                showToast('PDF Data Real & Foto Pengurus PAC berhasil diunduh', 'success');
+                showToast('PDF Data Real & Foto Pengurus berhasil diunduh', 'success');
               } catch {
                 showToast('Gagal mengekspor PDF', 'error');
               } finally {
@@ -263,13 +318,29 @@ export const PacOfficersView: React.FC = () => {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          {!isBranchUser && (
+            <select
+              value={scopeFilter}
+              onChange={(e) => setScopeFilter(e.target.value)}
+              className="px-3 py-2 rounded-xl border border-emerald-300 text-xs font-bold bg-emerald-50/60 text-emerald-900 focus:outline-hidden"
+            >
+              <option value="PAC">Tingkat PAC Kecamatan ({officers.filter((o) => !o.unitId).length})</option>
+              <option value="ALL_UNITS">Semua Pengurus PAC + Ranting/PK ({officers.length})</option>
+              {units.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({officers.filter((o) => o.unitId === u.id).length})
+                </option>
+              ))}
+            </select>
+          )}
+
           <select
             value={orgFilter}
             onChange={(e) => setOrgFilter(e.target.value as any)}
             className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium bg-white text-slate-700 focus:outline-hidden"
           >
-            <option value="ALL">Semua Organisasi ({pacOfficers.length})</option>
+            <option value="ALL">Semua Organisasi ({scopedOfficers.length})</option>
             <option value="IPNU">IPNU</option>
             <option value="IPPNU">IPPNU</option>
           </select>
@@ -289,7 +360,7 @@ export const PacOfficersView: React.FC = () => {
                 <th className="py-3 px-4 w-12 text-center">No</th>
                 <th className="py-3 px-4">Nama Lengkap & NIA</th>
                 <th className="py-3 px-4">Jabatan</th>
-                <th className="py-3 px-4">Departemen</th>
+                <th className="py-3 px-4">Unit / Departemen</th>
                 <th className="py-3 px-4">Organisasi</th>
                 <th className="py-3 px-4">Kontak WhatsApp</th>
                 <th className="py-3 px-4">Status</th>
@@ -299,24 +370,30 @@ export const PacOfficersView: React.FC = () => {
             <tbody className="divide-y divide-slate-100">
               {filteredOfficers.map((officer, idx) => {
                 const isIpnu = officer.organization === 'IPNU';
+                const photoSrc = officer.photoUrl || officer.avatar;
                 return (
                   <tr key={officer.id} className="hover:bg-slate-50/80 transition">
                     <td className="py-3 px-4 text-center text-slate-400 font-mono">{idx + 1}</td>
                     <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 flex items-center gap-2">
-                        {officer.photoUrl ? (
-                          <img src={officer.photoUrl} alt="" className="w-6 h-6 rounded-full object-cover" />
+                      <div className="font-bold text-slate-900 flex items-center gap-2.5">
+                        {photoSrc ? (
+                          <img src={photoSrc} alt="" className="w-8 h-8 rounded-full object-cover border border-emerald-200 shrink-0" />
                         ) : (
-                          <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-[10px]">
+                          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs shrink-0">
                             {officer.fullName.charAt(0)}
                           </div>
                         )}
-                        <span>{officer.fullName}</span>
+                        <div>
+                          <div>{officer.fullName}</div>
+                          <div className="text-[11px] font-mono text-emerald-700">{officer.nia || '-'}</div>
+                        </div>
                       </div>
-                      <div className="text-[11px] font-mono text-emerald-700 mt-0.5">{officer.nia}</div>
                     </td>
                     <td className="py-3 px-4 font-semibold text-slate-800">{officer.position}</td>
-                    <td className="py-3 px-4 text-slate-600">{officer.department}</td>
+                    <td className="py-3 px-4 text-slate-600">
+                      <div className="font-semibold text-slate-800">{officer.unitName || 'PAC Kecamatan Dukun'}</div>
+                      <div className="text-[11px] text-slate-500">{officer.department || 'Pengurus Harian'}</div>
+                    </td>
                     <td className="py-3 px-4">
                       <span
                         className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold ${
@@ -375,11 +452,32 @@ export const PacOfficersView: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        title={selectedOfficer ? 'Edit Data Pengurus PAC' : 'Tambah Pengurus PAC Baru'}
-        subtitle="Masa Khidmat 2024 - 2026"
+        title={selectedOfficer ? 'Edit Data Pengurus' : 'Tambah Data Pengurus Baru'}
+        subtitle="Masa Khidmat 2024 - 2026 • Sinkronisasi Real-Time"
         maxWidth="lg"
       >
         <form onSubmit={handleSave} className="space-y-4">
+          {!isBranchUser && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">Tingkat / Pangkalan Kepengurusan *</label>
+              <select
+                value={formData.unitId}
+                onChange={(e) => {
+                  const uid = e.target.value;
+                  const uName = units.find((u) => u.id === uid)?.name || 'PAC Kecamatan Dukun';
+                  setFormData({ ...formData, unitId: uid, unitName: uName });
+                }}
+                className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+              >
+                <option value="">PAC Kecamatan Dukun (Pengurus Anak Cabang)</option>
+                {units.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name} ({u.type})
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>

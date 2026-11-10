@@ -152,16 +152,88 @@ function saveStored<T>(key: string, data: T): void {
   }
 }
 
+function normalizeOfficer(o: Officer): Officer {
+  const photo = o.photoUrl || o.avatar || '';
+  const bioText = o.bio || o.description || '';
+  const order = o.orderIndex ?? o.displayOrder ?? 1;
+  return {
+    ...o,
+    photoUrl: photo,
+    avatar: photo,
+    bio: bioText,
+    description: bioText,
+    orderIndex: order,
+    displayOrder: order,
+    status: o.status || 'Aktif',
+  };
+}
+
+function normalizeMember(m: Member): Member {
+  const occ = m.occupation || m.schoolOrOccupation || '';
+  return {
+    ...m,
+    occupation: occ,
+    schoolOrOccupation: occ,
+    membershipStatus: m.membershipStatus || 'Aktif',
+  };
+}
+
+function normalizeActivity(a: Activity): Activity {
+  const img = a.imageUrl || a.coverImage || 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1200&q=80';
+  const desc = a.content || a.description || a.summary || '';
+  const sum = a.summary || a.description || a.content || '';
+  return {
+    ...a,
+    imageUrl: img,
+    coverImage: img,
+    content: desc,
+    description: desc,
+    summary: sum,
+  };
+}
+
+function normalizeSupervisor(s: Supervisor): Supervisor {
+  const titleText = s.roleOrTitle || s.role || s.title || 'Dewan Pelindung PAC';
+  return {
+    ...s,
+    roleOrTitle: titleText,
+    role: titleText,
+    title: titleText,
+  };
+}
+
+function normalizeAlumni(a: Alumni): Alumni {
+  const pos = a.pastPosition || a.formerPosition || 'Dewan Pembina PAC';
+  const act = a.currentActivity || a.currentProfession || '';
+  return {
+    ...a,
+    pastPosition: pos,
+    formerPosition: pos,
+    currentActivity: act,
+    currentProfession: act,
+  };
+}
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [settings, setSettings] = useState<WebsiteSettings>(() => loadStored('settings', INITIAL_SETTINGS));
   const [slides, setSlides] = useState<HeroSlide[]>(() => loadStored('slides', INITIAL_SLIDES));
   const [units, setUnits] = useState<UnitOrganization[]>(() => loadStored('units', INITIAL_UNITS));
-  const [officers, setOfficers] = useState<Officer[]>(() => loadStored('officers', INITIAL_OFFICERS));
-  const [members, setMembers] = useState<Member[]>(() => loadStored('members', INITIAL_MEMBERS));
-  const [supervisors, setSupervisors] = useState<Supervisor[]>(() => loadStored('supervisors', INITIAL_SUPERVISORS));
-  const [alumni, setAlumni] = useState<Alumni[]>(() => loadStored('alumni', INITIAL_ALUMNI));
+  const [officers, setOfficers] = useState<Officer[]>(() =>
+    loadStored('officers', INITIAL_OFFICERS).map(normalizeOfficer)
+  );
+  const [members, setMembers] = useState<Member[]>(() =>
+    loadStored('members', INITIAL_MEMBERS).map(normalizeMember)
+  );
+  const [supervisors, setSupervisors] = useState<Supervisor[]>(() =>
+    loadStored('supervisors', INITIAL_SUPERVISORS).map(normalizeSupervisor)
+  );
+  const [alumni, setAlumni] = useState<Alumni[]>(() =>
+    loadStored('alumni', INITIAL_ALUMNI).map(normalizeAlumni)
+  );
   const [spDocuments, setSpDocuments] = useState<SpDocument[]>(() => loadStored('spDocs', INITIAL_SP_DOCUMENTS));
-  const [activities, setActivities] = useState<Activity[]>(() => loadStored('activities', INITIAL_ACTIVITIES));
+  const [activities, setActivities] = useState<Activity[]>(() =>
+    loadStored('activities', INITIAL_ACTIVITIES).map(normalizeActivity)
+  );
   const [users, setUsers] = useState<UserAccount[]>(() => loadStored('users', INITIAL_USERS));
   const [logs, setLogs] = useState<ActivityLog[]>(() => loadStored('logs', INITIAL_LOGS));
   const [notifications, setNotifications] = useState<SystemNotification[]>(() => loadStored('notifications', INITIAL_NOTIFICATIONS));
@@ -184,6 +256,62 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   useEffect(() => saveStored('notifications', notifications), [notifications]);
   useEffect(() => saveStored('weights', weights), [weights]);
   useEffect(() => saveStored('currentUser', currentUser), [currentUser]);
+
+  // Real-time Cross-Tab Synchronization via window storage event
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (!e.key || !e.key.startsWith(STORAGE_PREFIX) || !e.newValue) return;
+      const shortKey = e.key.replace(STORAGE_PREFIX, '');
+      try {
+        const parsed = JSON.parse(e.newValue);
+        switch (shortKey) {
+          case 'settings':
+            setSettings(parsed);
+            break;
+          case 'slides':
+            setSlides(parsed);
+            break;
+          case 'units':
+            setUnits(parsed);
+            break;
+          case 'officers':
+            setOfficers((parsed as Officer[]).map(normalizeOfficer));
+            break;
+          case 'members':
+            setMembers((parsed as Member[]).map(normalizeMember));
+            break;
+          case 'supervisors':
+            setSupervisors((parsed as Supervisor[]).map(normalizeSupervisor));
+            break;
+          case 'alumni':
+            setAlumni((parsed as Alumni[]).map(normalizeAlumni));
+            break;
+          case 'spDocs':
+            setSpDocuments(parsed);
+            break;
+          case 'activities':
+            setActivities((parsed as Activity[]).map(normalizeActivity));
+            break;
+          case 'users':
+            setUsers(parsed);
+            break;
+          case 'logs':
+            setLogs(parsed);
+            break;
+          case 'notifications':
+            setNotifications(parsed);
+            break;
+          case 'weights':
+            setWeights(parsed);
+            break;
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   // Toast Helpers
   const showToast = (message: string, type: ToastMessage['type'] = 'success') => {
@@ -211,7 +339,99 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setLogs((prev) => [newLog, ...prev.slice(0, 99)]);
   };
 
-  // Recalculate unit statistics & scores
+  // Real-time reactive unit statistics, leaders, SP status & completeness score synchronization
+  useEffect(() => {
+    setUnits((prevUnits) => {
+      let hasChanges = false;
+      const nextUnits = prevUnits.map((u) => {
+        const unitMembers = members.filter((m) => m.unitId === u.id);
+        const unitOfficers = officers.filter((o) => o.unitId === u.id);
+        const unitActs = activities.filter(
+          (a) => a.unitId === u.id || (a.organizer && a.organizer.toLowerCase() === u.name.toLowerCase())
+        );
+        const unitSps = spDocuments.filter((s) => s.unitId === u.id);
+        const activeSpIpnu = unitSps.find((s) => s.organization === 'IPNU' && s.status === 'AKTIF');
+        const activeSpIppnu = unitSps.find((s) => s.organization === 'IPPNU' && s.status === 'AKTIF');
+        const latestSpIpnu = unitSps.find((s) => s.organization === 'IPNU');
+        const latestSpIppnu = unitSps.find((s) => s.organization === 'IPPNU');
+
+        // Sync leaderIpnu / leaderIppnu if unit officer with Ketua position exists
+        const officerKetuaIpnu = unitOfficers.find(
+          (o) => o.organization === 'IPNU' && o.position.toLowerCase().includes('ketua')
+        );
+        const officerKetuaIppnu = unitOfficers.find(
+          (o) => o.organization === 'IPPNU' && o.position.toLowerCase().includes('ketua')
+        );
+
+        const nextLeaderIpnu = officerKetuaIpnu ? officerKetuaIpnu.fullName : u.leaderIpnu;
+        const nextLeaderIppnu = officerKetuaIppnu ? officerKetuaIppnu.fullName : u.leaderIppnu;
+
+        const nextSpIpnuStatus = activeSpIpnu
+          ? 'AKTIF'
+          : latestSpIpnu
+          ? latestSpIpnu.status
+          : u.spIpnuStatus;
+        const nextSpIppnuStatus = activeSpIppnu
+          ? 'AKTIF'
+          : latestSpIppnu
+          ? latestSpIppnu.status
+          : u.spIppnuStatus;
+
+        const effectiveMembersCount = Math.max(u.membersCount, unitMembers.length);
+        const effectiveOfficersCount = Math.max(u.officersCount, unitOfficers.length);
+        const effectiveActivitiesCount = Math.max(u.activitiesCount, unitActs.length);
+
+        const indicators = evaluateUnitIndicators({
+          leaderIpnu: nextLeaderIpnu,
+          leaderIppnu: nextLeaderIppnu,
+          address: u.address,
+          officersCount: effectiveOfficersCount,
+          membersCount: effectiveMembersCount,
+          spIpnuStatus: nextSpIpnuStatus,
+          spIppnuStatus: nextSpIppnuStatus,
+          activitiesCount: effectiveActivitiesCount,
+          hasDocumentation:
+            unitActs.some((a) => (a.photos && a.photos.length > 0) || !!a.imageUrl || !!a.coverImage) ||
+            effectiveActivitiesCount > 0,
+        });
+
+        const score = calculateCompletenessScore(indicators, weights);
+        const grade = getCompletenessGrade(score);
+
+        if (
+          u.leaderIpnu !== nextLeaderIpnu ||
+          u.leaderIppnu !== nextLeaderIppnu ||
+          u.spIpnuStatus !== nextSpIpnuStatus ||
+          u.spIppnuStatus !== nextSpIppnuStatus ||
+          u.membersCount !== effectiveMembersCount ||
+          u.officersCount !== effectiveOfficersCount ||
+          u.activitiesCount !== effectiveActivitiesCount ||
+          u.completenessScore !== score ||
+          u.completenessGrade !== grade
+        ) {
+          hasChanges = true;
+          return {
+            ...u,
+            leaderIpnu: nextLeaderIpnu,
+            leaderIppnu: nextLeaderIppnu,
+            spIpnuStatus: nextSpIpnuStatus,
+            spIppnuStatus: nextSpIppnuStatus,
+            spIpnuNumber: activeSpIpnu?.spNumber || latestSpIpnu?.spNumber || u.spIpnuNumber,
+            spIppnuNumber: activeSpIppnu?.spNumber || latestSpIppnu?.spNumber || u.spIppnuNumber,
+            membersCount: effectiveMembersCount,
+            officersCount: effectiveOfficersCount,
+            activitiesCount: effectiveActivitiesCount,
+            completenessScore: score,
+            completenessGrade: grade,
+          };
+        }
+        return u;
+      });
+
+      return hasChanges ? nextUnits : prevUnits;
+    });
+  }, [members, officers, activities, spDocuments, weights]);
+
   const recalculateAllUnitScores = () => {
     setUnits((prevUnits) =>
       prevUnits.map((u) => {
@@ -220,16 +440,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const unitActs = activities.filter((a) => a.unitId === u.id);
         const unitSps = spDocuments.filter((s) => s.unitId === u.id && s.status === 'AKTIF');
 
+        const effectiveMembersCount = Math.max(u.membersCount, unitMembers.length);
+        const effectiveOfficersCount = Math.max(u.officersCount, unitOfficers.length);
+        const effectiveActivitiesCount = Math.max(u.activitiesCount, unitActs.length);
+
         const indicators = evaluateUnitIndicators({
           leaderIpnu: u.leaderIpnu,
           leaderIppnu: u.leaderIppnu,
           address: u.address,
-          officersCount: unitOfficers.length,
-          membersCount: unitMembers.length,
+          officersCount: effectiveOfficersCount,
+          membersCount: effectiveMembersCount,
           spIpnuStatus: unitSps.some((s) => s.organization === 'IPNU') ? 'AKTIF' : u.spIpnuStatus,
           spIppnuStatus: unitSps.some((s) => s.organization === 'IPPNU') ? 'AKTIF' : u.spIppnuStatus,
-          activitiesCount: unitActs.length,
-          hasDocumentation: unitActs.some((a) => a.photos && a.photos.length > 0),
+          activitiesCount: effectiveActivitiesCount,
+          hasDocumentation:
+            unitActs.some((a) => (a.photos && a.photos.length > 0) || !!a.imageUrl || !!a.coverImage) ||
+            effectiveActivitiesCount > 0,
         });
 
         const score = calculateCompletenessScore(indicators, weights);
@@ -237,9 +463,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
         return {
           ...u,
-          membersCount: Math.max(u.membersCount, unitMembers.length),
-          officersCount: Math.max(u.officersCount, unitOfficers.length),
-          activitiesCount: Math.max(u.activitiesCount, unitActs.length),
+          membersCount: effectiveMembersCount,
+          officersCount: effectiveOfficersCount,
+          activitiesCount: effectiveActivitiesCount,
           completenessScore: score,
           completenessGrade: grade,
           lastUpdated: new Date().toISOString().split('T')[0],
@@ -299,11 +525,60 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('Anda telah berhasil keluar sistem', 'info');
   };
 
-  // Settings & CMS
+  // Settings & CMS (with bidirectional sync to PAC Officers when slider or historicalLeaders are edited)
   const updateSettings = (newSettings: Partial<WebsiteSettings>) => {
-    setSettings((prev) => ({ ...prev, ...newSettings }));
+    setSettings((prev) => {
+      const merged = { ...prev, ...newSettings };
+      if (newSettings.history !== undefined && newSettings.historyText === undefined) {
+        merged.historyText = newSettings.history;
+      } else if (newSettings.historyText !== undefined && newSettings.history === undefined) {
+        merged.history = newSettings.historyText;
+      }
+      return merged;
+    });
+
+    // If historicalLeaders (Ketua PAC IPNU / IPPNU) was updated in CMS, sync with PAC officers
+    if (newSettings.historicalLeaders) {
+      const activeIpnu = newSettings.historicalLeaders.find(
+        (l) => l.organization === 'IPNU' && l.status === 'Aktif'
+      );
+      const activeIppnu = newSettings.historicalLeaders.find(
+        (l) => l.organization === 'IPPNU' && l.status === 'Aktif'
+      );
+
+      setOfficers((prevOfficers) =>
+        prevOfficers.map((o) => {
+          if (!o.unitId && o.position.toLowerCase().includes('ketua')) {
+            if (o.organization === 'IPNU' && activeIpnu) {
+              return normalizeOfficer({
+                ...o,
+                fullName: activeIpnu.name,
+                photoUrl: activeIpnu.photo || o.photoUrl,
+                avatar: activeIpnu.photo || o.avatar,
+                period: activeIpnu.period || o.period,
+                bio: activeIpnu.visionOrQuote || o.bio,
+                description: activeIpnu.visionOrQuote || o.description,
+              });
+            }
+            if (o.organization === 'IPPNU' && activeIppnu) {
+              return normalizeOfficer({
+                ...o,
+                fullName: activeIppnu.name,
+                photoUrl: activeIppnu.photo || o.photoUrl,
+                avatar: activeIppnu.photo || o.avatar,
+                period: activeIppnu.period || o.period,
+                bio: activeIppnu.visionOrQuote || o.bio,
+                description: activeIppnu.visionOrQuote || o.description,
+              });
+            }
+          }
+          return o;
+        })
+      );
+    }
+
     logActivity('Perbarui Pengaturan Web', 'Website CMS', 'Memperbarui konfigurasi utama');
-    showToast('Pengaturan website berhasil diperbarui', 'success');
+    showToast('Pengaturan website berhasil diperbarui & disinkronkan', 'success');
   };
 
   const addSlide = (slide: Omit<HeroSlide, 'id'>) => {
@@ -330,12 +605,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Units
   const addUnit = (unitData: Omit<UnitOrganization, 'id' | 'completenessScore' | 'completenessGrade' | 'lastUpdated'>) => {
-    const id = (unitData.type === 'RANTING' ? 'pr-' : 'pk-') + unitData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20);
+    const id = (unitData.type === 'RANTING' ? 'pr-' : 'pk-') + unitData.name.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 20) + '-' + Date.now().toString().slice(-3);
+    const indicators = evaluateUnitIndicators({
+      leaderIpnu: unitData.leaderIpnu,
+      leaderIppnu: unitData.leaderIppnu,
+      address: unitData.address,
+      officersCount: unitData.officersCount || 0,
+      membersCount: unitData.membersCount || 0,
+      spIpnuStatus: unitData.spIpnuStatus,
+      spIppnuStatus: unitData.spIppnuStatus,
+      activitiesCount: unitData.activitiesCount || 0,
+      hasDocumentation: (unitData.activitiesCount || 0) > 0,
+    });
+    const score = calculateCompletenessScore(indicators, weights);
+    const grade = getCompletenessGrade(score);
+
     const newUnit: UnitOrganization = {
       ...unitData,
       id,
-      completenessScore: 50,
-      completenessGrade: 'Cukup',
+      completenessScore: score,
+      completenessGrade: grade,
       lastUpdated: new Date().toISOString().split('T')[0],
     };
     setUnits((prev) => [newUnit, ...prev]);
@@ -348,13 +637,61 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       prev.map((u) => {
         if (u.id === id) {
           const merged = { ...u, ...updated, lastUpdated: new Date().toISOString().split('T')[0] };
-          return merged;
+          const indicators = evaluateUnitIndicators({
+            leaderIpnu: merged.leaderIpnu,
+            leaderIppnu: merged.leaderIppnu,
+            address: merged.address,
+            officersCount: merged.officersCount,
+            membersCount: merged.membersCount,
+            spIpnuStatus: merged.spIpnuStatus,
+            spIppnuStatus: merged.spIppnuStatus,
+            activitiesCount: merged.activitiesCount,
+            hasDocumentation: merged.activitiesCount > 0,
+          });
+          const score = calculateCompletenessScore(indicators, weights);
+          const grade = getCompletenessGrade(score);
+          return {
+            ...merged,
+            completenessScore: score,
+            completenessGrade: grade,
+          };
         }
         return u;
       })
     );
+
+    // Propagate unitName / leader changes to related records in real time
+    if (updated.name) {
+      setMembers((prev) => prev.map((m) => (m.unitId === id ? { ...m, unitName: updated.name! } : m)));
+      setOfficers((prev) => prev.map((o) => (o.unitId === id ? { ...o, unitName: updated.name! } : o)));
+      setSpDocuments((prev) => prev.map((s) => (s.unitId === id ? { ...s, unitName: updated.name! } : s)));
+      setActivities((prev) =>
+        prev.map((a) => (a.unitId === id ? { ...a, unitName: updated.name!, organizer: updated.name! } : a))
+      );
+      setUsers((prev) => prev.map((usr) => (usr.targetUnitId === id ? { ...usr, targetUnitName: updated.name! } : usr)));
+    }
+
+    if (updated.leaderIpnu) {
+      setOfficers((prev) =>
+        prev.map((o) =>
+          o.unitId === id && o.organization === 'IPNU' && o.position.toLowerCase().includes('ketua')
+            ? { ...o, fullName: updated.leaderIpnu! }
+            : o
+        )
+      );
+    }
+    if (updated.leaderIppnu) {
+      setOfficers((prev) =>
+        prev.map((o) =>
+          o.unitId === id && o.organization === 'IPPNU' && o.position.toLowerCase().includes('ketua')
+            ? { ...o, fullName: updated.leaderIppnu! }
+            : o
+        )
+      );
+    }
+
     logActivity('Perbarui Data Ranting/PK', `ID: ${id}`);
-    showToast('Data ranting/komisariat berhasil disimpan', 'success');
+    showToast('Data ranting/komisariat berhasil disimpan & disinkronkan', 'success');
   };
 
   const deleteUnit = (id: string) => {
@@ -364,27 +701,182 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('Ranting/Komisariat berhasil dihapus', 'info');
   };
 
+  // Helper to sync PAC Officer changes into settings.pacOfficersSlider and settings.historicalLeaders
+  const syncPacOfficerToSettings = (officer: Officer, isDeleted = false) => {
+    if (officer.unitId) return; // Only PAC officers
+    const photo = officer.photoUrl || officer.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80';
+    const quote = officer.bio || officer.description || `Pengurus Harian PAC ${officer.organization} Kecamatan Dukun`;
+    const org: 'IPNU' | 'IPPNU' = officer.organization === 'IPPNU' ? 'IPPNU' : 'IPNU';
+
+    setSettings((prev) => {
+      let nextSlider = [...(prev.pacOfficersSlider || [])];
+      const existingSlideIdx = nextSlider.findIndex(
+        (s) =>
+          s.id === `slide-${officer.id}` ||
+          s.name.toLowerCase() === officer.fullName.toLowerCase() ||
+          (s.organization === org && s.position.toLowerCase() === officer.position.toLowerCase())
+      );
+
+      if (isDeleted) {
+        if (existingSlideIdx !== -1) {
+          nextSlider.splice(existingSlideIdx, 1);
+        }
+      } else if (existingSlideIdx !== -1) {
+        nextSlider[existingSlideIdx] = {
+          ...nextSlider[existingSlideIdx],
+          name: officer.fullName,
+          position: officer.position,
+          organization: org,
+          photo: photo || nextSlider[existingSlideIdx].photo,
+          quote: quote || nextSlider[existingSlideIdx].quote,
+        };
+      } else {
+        nextSlider.push({
+          id: `slide-${officer.id}`,
+          name: officer.fullName,
+          position: officer.position,
+          organization: org,
+          photo,
+          quote,
+        });
+      }
+
+      // Also sync settings.historicalLeaders if this PAC officer is Ketua IPNU or Ketua IPPNU
+      let nextLeaders = [...(prev.historicalLeaders || [])];
+      const isMainKetua =
+        officer.position.toLowerCase().includes('ketua') &&
+        !officer.position.toLowerCase().includes('wakil');
+
+      if (!isDeleted && isMainKetua) {
+        const activeIdx = nextLeaders.findIndex(
+          (l) => l.organization === org && l.status === 'Aktif'
+        );
+        if (activeIdx !== -1) {
+          nextLeaders[activeIdx] = {
+            ...nextLeaders[activeIdx],
+            name: officer.fullName,
+            period: officer.period || nextLeaders[activeIdx].period,
+            photo: photo || nextLeaders[activeIdx].photo,
+            visionOrQuote: quote || nextLeaders[activeIdx].visionOrQuote,
+          };
+        } else {
+          nextLeaders.unshift({
+            id: `hl-${officer.id}`,
+            name: officer.fullName,
+            period: officer.period || prev.period || '2024 - 2026',
+            organization: org,
+            photo,
+            visionOrQuote: quote,
+            status: 'Aktif',
+            originUnit: `PAC ${org} Dukun`,
+          });
+        }
+      }
+
+      return {
+        ...prev,
+        pacOfficersSlider: nextSlider,
+        historicalLeaders: nextLeaders,
+      };
+    });
+  };
+
   // Officers
   const addOfficer = (officerData: Omit<Officer, 'id'>) => {
-    const newOfficer: Officer = {
+    const newOfficer = normalizeOfficer({
       ...officerData,
       id: 'off-' + Date.now(),
-    };
+    });
     setOfficers((prev) => [...prev, newOfficer]);
+
+    if (!newOfficer.unitId) {
+      syncPacOfficerToSettings(newOfficer, false);
+    } else {
+      setUnits((prev) =>
+        prev.map((u) => {
+          if (u.id === newOfficer.unitId) {
+            const isKetua = newOfficer.position.toLowerCase().includes('ketua') && !newOfficer.position.toLowerCase().includes('wakil');
+            return {
+              ...u,
+              officersCount: u.officersCount + 1,
+              leaderIpnu: isKetua && newOfficer.organization === 'IPNU' ? newOfficer.fullName : u.leaderIpnu,
+              leaderIppnu: isKetua && newOfficer.organization === 'IPPNU' ? newOfficer.fullName : u.leaderIppnu,
+              lastUpdated: new Date().toISOString().split('T')[0],
+            };
+          }
+          return u;
+        })
+      );
+    }
+
     logActivity('Tambah Pengurus', newOfficer.fullName, `${newOfficer.position} - ${newOfficer.organization}`);
-    showToast(`Pengurus ${newOfficer.fullName} berhasil ditambahkan`, 'success');
-    recalculateAllUnitScores();
+    showToast(`Pengurus ${newOfficer.fullName} berhasil ditambahkan & disinkronkan`, 'success');
   };
 
   const updateOfficer = (id: string, updated: Partial<Officer>) => {
-    setOfficers((prev) => prev.map((o) => (o.id === id ? { ...o, ...updated } : o)));
+    let updatedFullOfficer: Officer | null = null;
+    setOfficers((prev) =>
+      prev.map((o) => {
+        if (o.id === id) {
+          const merged = normalizeOfficer({
+            ...o,
+            ...updated,
+            photoUrl: updated.photoUrl !== undefined ? updated.photoUrl : updated.avatar !== undefined ? updated.avatar : o.photoUrl || o.avatar,
+            avatar: updated.avatar !== undefined ? updated.avatar : updated.photoUrl !== undefined ? updated.photoUrl : o.avatar || o.photoUrl,
+            bio: updated.bio !== undefined ? updated.bio : updated.description !== undefined ? updated.description : o.bio || o.description,
+            description: updated.description !== undefined ? updated.description : updated.bio !== undefined ? updated.bio : o.description || o.bio,
+            orderIndex: updated.orderIndex ?? updated.displayOrder ?? o.orderIndex ?? o.displayOrder,
+            displayOrder: updated.displayOrder ?? updated.orderIndex ?? o.displayOrder ?? o.orderIndex,
+          });
+          updatedFullOfficer = merged;
+          return merged;
+        }
+        return o;
+      })
+    );
+
+    if (updatedFullOfficer) {
+      const off = updatedFullOfficer as Officer;
+      if (!off.unitId) {
+        syncPacOfficerToSettings(off, false);
+      } else {
+        setUnits((prev) =>
+          prev.map((u) => {
+            if (u.id === off.unitId) {
+              const isKetua = off.position.toLowerCase().includes('ketua') && !off.position.toLowerCase().includes('wakil');
+              return {
+                ...u,
+                leaderIpnu: isKetua && off.organization === 'IPNU' ? off.fullName : u.leaderIpnu,
+                leaderIppnu: isKetua && off.organization === 'IPPNU' ? off.fullName : u.leaderIppnu,
+                lastUpdated: new Date().toISOString().split('T')[0],
+              };
+            }
+            return u;
+          })
+        );
+      }
+    }
+
     logActivity('Perbarui Pengurus', `ID: ${id}`);
-    showToast('Data pengurus berhasil diperbarui', 'success');
+    showToast('Data pengurus berhasil diperbarui & disinkronkan di seluruh halaman', 'success');
   };
 
   const deleteOfficer = (id: string) => {
     const target = officers.find((o) => o.id === id);
     setOfficers((prev) => prev.filter((o) => o.id !== id));
+    if (target) {
+      if (!target.unitId) {
+        syncPacOfficerToSettings(target, true);
+      } else {
+        setUnits((prev) =>
+          prev.map((u) =>
+            u.id === target.unitId
+              ? { ...u, officersCount: Math.max(0, u.officersCount - 1), lastUpdated: new Date().toISOString().split('T')[0] }
+              : u
+          )
+        );
+      }
+    }
     logActivity('Hapus Pengurus', target ? target.fullName : id);
     showToast('Data pengurus berhasil dihapus', 'info');
   };
@@ -398,15 +890,21 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return { success: false, error: val.message };
     }
 
-    const newMember: Member = {
+    const newMember = normalizeMember({
       ...memberData,
       id: 'mem-' + Date.now() + Math.random().toString(36).substring(2, 5),
       createdAt: new Date().toISOString().split('T')[0],
-    };
+    });
     setMembers((prev) => [newMember, ...prev]);
+    setUnits((prev) =>
+      prev.map((u) =>
+        u.id === newMember.unitId
+          ? { ...u, membersCount: u.membersCount + 1, lastUpdated: new Date().toISOString().split('T')[0] }
+          : u
+      )
+    );
     logActivity('Input Anggota Baru', newMember.fullName, `NIA: ${newMember.nia} (${newMember.unitName})`);
     showToast(`Anggota ${newMember.fullName} berhasil didaftarkan`, 'success');
-    recalculateAllUnitScores();
     return { success: true };
   };
 
@@ -426,18 +924,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return;
       }
       currentNias.add(niaLower);
-      validToAdd.push({
-        ...item,
-        id: 'mem-bulk-' + Date.now() + '-' + idx,
-        createdAt: new Date().toISOString().split('T')[0],
-      });
+      validToAdd.push(
+        normalizeMember({
+          ...item,
+          id: 'mem-bulk-' + Date.now() + '-' + idx,
+          createdAt: new Date().toISOString().split('T')[0],
+        })
+      );
     });
 
     if (validToAdd.length > 0) {
       setMembers((prev) => [...validToAdd, ...prev]);
+      const addedByUnit: Record<string, number> = {};
+      validToAdd.forEach((m) => {
+        addedByUnit[m.unitId] = (addedByUnit[m.unitId] || 0) + 1;
+      });
+      setUnits((prev) =>
+        prev.map((u) =>
+          addedByUnit[u.id]
+            ? { ...u, membersCount: u.membersCount + addedByUnit[u.id], lastUpdated: new Date().toISOString().split('T')[0] }
+            : u
+        )
+      );
       logActivity('Import Massal Anggota', `${validToAdd.length} Data`, `Berhasil mengimpor ${validToAdd.length} anggota`);
       showToast(`Berhasil mengimpor ${validToAdd.length} anggota baru`, 'success');
-      recalculateAllUnitScores();
     }
 
     if (errors.length > 0) {
@@ -448,17 +958,43 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const updateMember = (id: string, updated: Partial<Member>) => {
-    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, ...updated } : m)));
+    setMembers((prev) =>
+      prev.map((m) => {
+        if (m.id === id) {
+          const occ =
+            updated.occupation !== undefined
+              ? updated.occupation
+              : updated.schoolOrOccupation !== undefined
+              ? updated.schoolOrOccupation
+              : m.occupation || m.schoolOrOccupation;
+          return normalizeMember({
+            ...m,
+            ...updated,
+            occupation: occ,
+            schoolOrOccupation: occ,
+          });
+        }
+        return m;
+      })
+    );
     logActivity('Perbarui Data Anggota', `ID: ${id}`);
-    showToast('Data anggota berhasil disimpan', 'success');
+    showToast('Data anggota berhasil disimpan & disinkronkan', 'success');
   };
 
   const deleteMember = (id: string) => {
     const target = members.find((m) => m.id === id);
     setMembers((prev) => prev.filter((m) => m.id !== id));
+    if (target) {
+      setUnits((prev) =>
+        prev.map((u) =>
+          u.id === target.unitId
+            ? { ...u, membersCount: Math.max(0, u.membersCount - 1), lastUpdated: new Date().toISOString().split('T')[0] }
+            : u
+        )
+      );
+    }
     logActivity('Hapus Anggota', target ? target.fullName : id);
     showToast('Data anggota berhasil dihapus', 'info');
-    recalculateAllUnitScores();
   };
 
   // SP Documents
@@ -469,6 +1005,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       submittedAt: new Date().toISOString().split('T')[0],
     };
     setSpDocuments((prev) => [newDoc, ...prev]);
+
+    // Immediately sync SP status and leader name to unit
+    setUnits((prev) =>
+      prev.map((u) => {
+        if (u.id === newDoc.unitId) {
+          return {
+            ...u,
+            spIpnuStatus: newDoc.organization === 'IPNU' ? newDoc.status : u.spIpnuStatus,
+            spIppnuStatus: newDoc.organization === 'IPPNU' ? newDoc.status : u.spIppnuStatus,
+            spIpnuNumber: newDoc.organization === 'IPNU' ? newDoc.spNumber : u.spIpnuNumber,
+            spIppnuNumber: newDoc.organization === 'IPPNU' ? newDoc.spNumber : u.spIppnuNumber,
+            leaderIpnu: newDoc.organization === 'IPNU' && newDoc.leaderName ? newDoc.leaderName : u.leaderIpnu,
+            leaderIppnu: newDoc.organization === 'IPPNU' && newDoc.leaderName ? newDoc.leaderName : u.leaderIppnu,
+            spValidUntil: newDoc.validUntil,
+            lastUpdated: new Date().toISOString().split('T')[0],
+          };
+        }
+        return u;
+      })
+    );
 
     // Send notification to Admin PAC
     const notif: SystemNotification = {
@@ -484,7 +1040,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setNotifications((prev) => [notif, ...prev]);
 
     logActivity('Pengajuan Dokumen SP', newDoc.unitName, `Nomor: ${newDoc.spNumber}`);
-    showToast('Dokumen SP berhasil diunggah dan menunggu verifikasi', 'success');
+    showToast('Dokumen SP berhasil diunggah dan disinkronkan', 'success');
   };
 
   const verifySpDocument = (id: string, status: SpStatus, notes?: string) => {
@@ -512,6 +1068,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             spIpnuNumber: doc.organization === 'IPNU' ? doc.spNumber : u.spIpnuNumber,
             spIppnuNumber: doc.organization === 'IPPNU' ? doc.spNumber : u.spIppnuNumber,
             spValidUntil: doc.validUntil,
+            lastUpdated: new Date().toISOString().split('T')[0],
           };
         }
         return u;
@@ -535,7 +1092,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     logActivity('Verifikasi Dokumen SP', `${doc.unitName} - ${status}`, notes);
     showToast(`Dokumen SP berhasil diverifikasi (${status})`, 'success');
-    recalculateAllUnitScores();
   };
 
   const deleteSpDocument = (id: string) => {
@@ -546,29 +1102,81 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Activities
   const addActivity = (actData: Omit<Activity, 'id' | 'createdAt'>) => {
-    const newAct: Activity = {
+    const newAct = normalizeActivity({
       ...actData,
       id: 'act-' + Date.now(),
+      publicationStatus: actData.publicationStatus || 'PUBLISHED',
       createdAt: new Date().toISOString().split('T')[0],
-    };
+    });
     setActivities((prev) => [newAct, ...prev]);
+
+    if (newAct.unitId) {
+      setUnits((prev) =>
+        prev.map((u) =>
+          u.id === newAct.unitId
+            ? { ...u, activitiesCount: u.activitiesCount + 1, lastUpdated: new Date().toISOString().split('T')[0] }
+            : u
+        )
+      );
+    }
+
     logActivity('Tambah Kegiatan/Berita', newAct.title, `Kategori: ${newAct.category}`);
-    showToast('Kegiatan berhasil ditambahkan', 'success');
-    recalculateAllUnitScores();
+    showToast('Kegiatan berhasil ditambahkan & tampil di halaman utama', 'success');
   };
 
   const updateActivity = (id: string, updated: Partial<Activity>) => {
-    setActivities((prev) => prev.map((a) => (a.id === id ? { ...a, ...updated } : a)));
+    setActivities((prev) =>
+      prev.map((a) => {
+        if (a.id === id) {
+          const img =
+            updated.imageUrl !== undefined
+              ? updated.imageUrl
+              : updated.coverImage !== undefined
+              ? updated.coverImage
+              : a.imageUrl || a.coverImage;
+          const desc =
+            updated.content !== undefined
+              ? updated.content
+              : updated.description !== undefined
+              ? updated.description
+              : a.content || a.description || a.summary;
+          const sum =
+            updated.summary !== undefined
+              ? updated.summary
+              : updated.description !== undefined
+              ? updated.description
+              : a.summary || a.description;
+          return normalizeActivity({
+            ...a,
+            ...updated,
+            imageUrl: img,
+            coverImage: img,
+            content: desc,
+            description: desc,
+            summary: sum,
+          });
+        }
+        return a;
+      })
+    );
     logActivity('Perbarui Kegiatan', `ID: ${id}`);
-    showToast('Kegiatan berhasil diperbarui', 'success');
+    showToast('Kegiatan berhasil diperbarui & disinkronkan', 'success');
   };
 
   const deleteActivity = (id: string) => {
     const target = activities.find((a) => a.id === id);
     setActivities((prev) => prev.filter((a) => a.id !== id));
+    if (target?.unitId) {
+      setUnits((prev) =>
+        prev.map((u) =>
+          u.id === target.unitId
+            ? { ...u, activitiesCount: Math.max(0, u.activitiesCount - 1), lastUpdated: new Date().toISOString().split('T')[0] }
+            : u
+        )
+      );
+    }
     logActivity('Hapus Kegiatan', target ? target.title : id);
     showToast('Kegiatan berhasil dihapus', 'info');
-    recalculateAllUnitScores();
   };
 
   const moderateActivity = (id: string, status: Activity['publicationStatus'], notes?: string) => {
@@ -581,33 +1189,80 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Supervisors & Alumni
   const addSupervisor = (sup: Omit<Supervisor, 'id'>) => {
-    const newSup: Supervisor = { ...sup, id: 'sup-' + Date.now() };
+    const newSup = normalizeSupervisor({ ...sup, id: 'sup-' + Date.now() });
     setSupervisors((prev) => [...prev, newSup]);
-    logActivity('Tambah Pembina', newSup.fullName);
-    showToast('Data pembina berhasil ditambahkan', 'success');
+    logActivity('Tambah Dewan Pelindung', newSup.fullName);
+    showToast('Data Dewan Pelindung berhasil ditambahkan & disinkronkan', 'success');
   };
   const updateSupervisor = (id: string, sup: Partial<Supervisor>) => {
-    setSupervisors((prev) => prev.map((s) => (s.id === id ? { ...s, ...sup } : s)));
-    showToast('Data pembina berhasil diperbarui', 'success');
+    setSupervisors((prev) =>
+      prev.map((s) => {
+        if (s.id === id) {
+          const titleText =
+            sup.roleOrTitle !== undefined
+              ? sup.roleOrTitle
+              : sup.role !== undefined
+              ? sup.role
+              : sup.title !== undefined
+              ? sup.title
+              : s.roleOrTitle || s.role || s.title;
+          return normalizeSupervisor({
+            ...s,
+            ...sup,
+            roleOrTitle: titleText,
+            role: titleText,
+            title: titleText,
+          });
+        }
+        return s;
+      })
+    );
+    showToast('Data Dewan Pelindung berhasil diperbarui & disinkronkan', 'success');
   };
   const deleteSupervisor = (id: string) => {
     setSupervisors((prev) => prev.filter((s) => s.id !== id));
-    showToast('Data pembina berhasil dihapus', 'info');
+    showToast('Data Dewan Pelindung berhasil dihapus', 'info');
   };
 
   const addAlumni = (alm: Omit<Alumni, 'id'>) => {
-    const newAlm: Alumni = { ...alm, id: 'alm-' + Date.now() };
+    const newAlm = normalizeAlumni({ ...alm, id: 'alm-' + Date.now() });
     setAlumni((prev) => [...prev, newAlm]);
-    logActivity('Tambah Majelis Alumni', newAlm.fullName);
-    showToast('Data alumni berhasil ditambahkan', 'success');
+    logActivity('Tambah Dewan Pembina (Alumni)', newAlm.fullName);
+    showToast('Data Dewan Pembina berhasil ditambahkan & disinkronkan', 'success');
   };
   const updateAlumni = (id: string, alm: Partial<Alumni>) => {
-    setAlumni((prev) => prev.map((a) => (a.id === id ? { ...a, ...alm } : a)));
-    showToast('Data alumni berhasil diperbarui', 'success');
+    setAlumni((prev) =>
+      prev.map((a) => {
+        if (a.id === id) {
+          const pos =
+            alm.pastPosition !== undefined
+              ? alm.pastPosition
+              : alm.formerPosition !== undefined
+              ? alm.formerPosition
+              : a.pastPosition || a.formerPosition;
+          const act =
+            alm.currentActivity !== undefined
+              ? alm.currentActivity
+              : alm.currentProfession !== undefined
+              ? alm.currentProfession
+              : a.currentActivity || a.currentProfession;
+          return normalizeAlumni({
+            ...a,
+            ...alm,
+            pastPosition: pos,
+            formerPosition: pos,
+            currentActivity: act,
+            currentProfession: act,
+          });
+        }
+        return a;
+      })
+    );
+    showToast('Data Dewan Pembina berhasil diperbarui & disinkronkan', 'success');
   };
   const deleteAlumni = (id: string) => {
     setAlumni((prev) => prev.filter((a) => a.id !== id));
-    showToast('Data alumni berhasil dihapus', 'info');
+    showToast('Data Dewan Pembina berhasil dihapus', 'info');
   };
 
   // Users
@@ -623,6 +1278,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
   const updateUser = (id: string, user: Partial<UserAccount>) => {
     setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, ...user } : u)));
+    if (currentUser?.id === id) {
+      setCurrentUser((prev) => (prev ? { ...prev, ...user } : null));
+    }
     showToast('Data akun pengguna berhasil diperbarui', 'success');
   };
   const deleteUser = (id: string) => {
@@ -646,7 +1304,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setWeights(newWeights);
     logActivity('Perbarui Bobot Penilaian', 'Indikator Kelengkapan');
     showToast('Bobot penilaian persentase berhasil diperbarui', 'success');
-    recalculateAllUnitScores();
   };
 
   // Notifications

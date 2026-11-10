@@ -171,12 +171,23 @@ export const BranchesDirectoryView: React.FC = () => {
     setDetailModalOpen(true);
   };
 
+  // Always resolve the live unit from units state so modal updates in real time
+  const liveSelectedUnit = selectedUnit
+    ? units.find((u) => u.id === selectedUnit.id) || selectedUnit
+    : null;
+
   // Associated records for active detail unit
-  const activeMembers = selectedUnit ? members.filter((m) => m.unitId === selectedUnit.id) : [];
-  const activeOfficers = selectedUnit ? officers.filter((o) => o.unitId === selectedUnit.id) : [];
-  const activeSps = selectedUnit ? spDocuments.filter((s) => s.unitId === selectedUnit.id) : [];
-  const activeActs = selectedUnit ? activities.filter((a) => a.unitId === selectedUnit.id) : [];
-  const activeLogs = selectedUnit ? logs.filter((l) => l.target.includes(selectedUnit.name)) : [];
+  const activeMembers = liveSelectedUnit ? members.filter((m) => m.unitId === liveSelectedUnit.id) : [];
+  const activeOfficers = liveSelectedUnit ? officers.filter((o) => o.unitId === liveSelectedUnit.id) : [];
+  const activeSps = liveSelectedUnit ? spDocuments.filter((s) => s.unitId === liveSelectedUnit.id) : [];
+  const activeActs = liveSelectedUnit
+    ? activities.filter(
+        (a) =>
+          a.unitId === liveSelectedUnit.id ||
+          (a.organizer && a.organizer.toLowerCase() === liveSelectedUnit.name.toLowerCase())
+      )
+    : [];
+  const activeLogs = liveSelectedUnit ? logs.filter((l) => l.target.includes(liveSelectedUnit.name) || l.target.includes(liveSelectedUnit.id)) : [];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-200">
@@ -399,11 +410,11 @@ export const BranchesDirectoryView: React.FC = () => {
       </div>
 
       {/* 8-Tab Deep Dive Detail Modal (Section 5) */}
-      {selectedUnit && detailModalOpen && (
+      {liveSelectedUnit && detailModalOpen && (
         <Modal
           isOpen={detailModalOpen}
           onClose={() => setDetailModalOpen(false)}
-          title={`Pusat Informasi: ${selectedUnit.name}`}
+          title={`Pusat Informasi: ${liveSelectedUnit.name}`}
           subtitle={`Struktur lengkap, kepengurusan, berkas SP, dan histori audit`}
           maxWidth="4xl"
         >
@@ -440,36 +451,36 @@ export const BranchesDirectoryView: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <span className="text-slate-400 block">Nama Resmi</span>
-                    <strong className="text-slate-900 text-sm">{selectedUnit.name}</strong>
+                    <strong className="text-slate-900 text-sm">{liveSelectedUnit.name}</strong>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <span className="text-slate-400 block">Jenis Unit & Wilayah</span>
                     <strong className="text-slate-900 text-sm">
-                      {selectedUnit.type} • {selectedUnit.villageOrSchool}
+                      {liveSelectedUnit.type} • {liveSelectedUnit.villageOrSchool}
                     </strong>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <span className="text-slate-400 block">Ketua IPNU</span>
-                    <strong className="text-slate-900">{selectedUnit.leaderIpnu || '-'}</strong>
+                    <strong className="text-slate-900">{liveSelectedUnit.leaderIpnu || '-'}</strong>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <span className="text-slate-400 block">Ketua IPPNU</span>
-                    <strong className="text-slate-900">{selectedUnit.leaderIppnu || '-'}</strong>
+                    <strong className="text-slate-900">{liveSelectedUnit.leaderIppnu || '-'}</strong>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <span className="text-slate-400 block">Alamat Sekretariat</span>
-                    <span className="text-slate-800">{selectedUnit.address || 'Belum diisi'}</span>
+                    <span className="text-slate-800">{liveSelectedUnit.address || 'Belum diisi'}</span>
                   </div>
                   <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
                     <span className="text-slate-400 block">Nomor HP / WhatsApp</span>
-                    <span className="text-slate-800">{selectedUnit.phoneLeader || '-'}</span>
+                    <span className="text-slate-800">{liveSelectedUnit.phoneLeader || '-'}</span>
                   </div>
                 </div>
 
-                {selectedUnit.historySummary && (
+                {liveSelectedUnit.historySummary && (
                   <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-200 text-emerald-950">
                     <strong className="block mb-1">Catatan Sejarah Singkat:</strong>
-                    <p>{selectedUnit.historySummary}</p>
+                    <p>{liveSelectedUnit.historySummary}</p>
                   </div>
                 )}
               </div>
@@ -480,21 +491,33 @@ export const BranchesDirectoryView: React.FC = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center text-xs">
                   <span className="font-semibold text-slate-700">
-                    Total Pengurus: <strong>{activeOfficers.length || selectedUnit.officersCount}</strong>
+                    Total Pengurus: <strong>{activeOfficers.length || liveSelectedUnit.officersCount}</strong>
                   </span>
                 </div>
                 <div className="divide-y divide-slate-100 border border-slate-200 rounded-xl overflow-hidden text-xs">
                   <div className="p-3 bg-slate-50 font-bold text-slate-700 flex justify-between">
-                    <span>Ketua IPNU: {selectedUnit.leaderIpnu}</span>
+                    <span>Ketua IPNU: {liveSelectedUnit.leaderIpnu}</span>
                     <span className="text-emerald-700">Mandat Sah</span>
                   </div>
                   <div className="p-3 bg-slate-50 font-bold text-slate-700 flex justify-between">
-                    <span>Ketua IPPNU: {selectedUnit.leaderIppnu}</span>
+                    <span>Ketua IPPNU: {liveSelectedUnit.leaderIppnu}</span>
                     <span className="text-emerald-700">Mandat Sah</span>
                   </div>
-                  <div className="p-3 text-slate-500 text-[11px] italic text-center">
-                    Daftar lengkap anggota susunan pengurus sesuai SK/SP PC IPNU IPPNU Kabupaten Gresik.
-                  </div>
+                  {activeOfficers.length > 0 ? (
+                    activeOfficers.map((off) => (
+                      <div key={off.id} className="p-2.5 flex items-center justify-between bg-white">
+                        <div>
+                          <span className="font-bold text-slate-900">{off.fullName}</span>
+                          <span className="text-slate-500 ml-2">({off.position} - {off.organization})</span>
+                        </div>
+                        <span className="text-[11px] font-mono text-emerald-700">{off.nia}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-3 text-slate-500 text-[11px] italic text-center">
+                      Daftar lengkap anggota susunan pengurus sesuai SK/SP PC IPNU IPPNU Kabupaten Gresik.
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -521,7 +544,7 @@ export const BranchesDirectoryView: React.FC = () => {
                           <tr key={m.id}>
                             <td className="p-2.5 font-bold">{m.fullName}</td>
                             <td className="p-2.5 font-mono text-emerald-700">{m.nia}</td>
-                            <td className="p-2.5">{m.schoolOrOccupation}</td>
+                            <td className="p-2.5">{m.schoolOrOccupation || m.occupation}</td>
                             <td className="p-2.5">{m.membershipStatus}</td>
                           </tr>
                         ))}
@@ -541,21 +564,21 @@ export const BranchesDirectoryView: React.FC = () => {
               <div className="space-y-3 text-xs">
                 <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                   <div>
-                    <strong className="block text-slate-900">SP IPNU: {selectedUnit.spIpnuNumber || 'Belum Terbit'}</strong>
-                    <span className="text-slate-500">Status: {selectedUnit.spIpnuStatus}</span>
+                    <strong className="block text-slate-900">SP IPNU: {liveSelectedUnit.spIpnuNumber || 'Belum Terbit'}</strong>
+                    <span className="text-slate-500">Status: {liveSelectedUnit.spIpnuStatus}</span>
                   </div>
                   <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold">
-                    {selectedUnit.spIpnuStatus}
+                    {liveSelectedUnit.spIpnuStatus}
                   </span>
                 </div>
 
                 <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
                   <div>
-                    <strong className="block text-slate-900">SP IPPNU: {selectedUnit.spIppnuNumber || 'Belum Terbit'}</strong>
-                    <span className="text-slate-500">Status: {selectedUnit.spIppnuStatus}</span>
+                    <strong className="block text-slate-900">SP IPPNU: {liveSelectedUnit.spIppnuNumber || 'Belum Terbit'}</strong>
+                    <span className="text-slate-500">Status: {liveSelectedUnit.spIppnuStatus}</span>
                   </div>
                   <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 font-bold">
-                    {selectedUnit.spIppnuStatus}
+                    {liveSelectedUnit.spIppnuStatus}
                   </span>
                 </div>
               </div>
@@ -586,15 +609,30 @@ export const BranchesDirectoryView: React.FC = () => {
             {activeDetailTab === 'dokumentasi' && (
               <div className="text-xs">
                 <div className="grid grid-cols-3 gap-3">
-                  <div className="aspect-video bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=400&q=80" alt="Kegiatan" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="aspect-video bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=400&q=80" alt="Kegiatan" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="aspect-video bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
-                    <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=400&q=80" alt="Kegiatan" className="w-full h-full object-cover" />
-                  </div>
+                  {activeActs.some((a) => a.imageUrl || a.coverImage) ? (
+                    activeActs
+                      .filter((a) => a.imageUrl || a.coverImage)
+                      .map((act) => (
+                        <div key={act.id} className="aspect-video bg-slate-100 rounded-xl border border-slate-200 overflow-hidden relative group">
+                          <img src={act.imageUrl || act.coverImage} alt={act.title} className="w-full h-full object-cover" />
+                          <div className="absolute inset-x-0 bottom-0 bg-black/60 text-white p-1.5 text-[10px] font-medium truncate">
+                            {act.title}
+                          </div>
+                        </div>
+                      ))
+                  ) : (
+                    <>
+                      <div className="aspect-video bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=400&q=80" alt="Kegiatan" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="aspect-video bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=400&q=80" alt="Kegiatan" className="w-full h-full object-cover" />
+                      </div>
+                      <div className="aspect-video bg-slate-100 rounded-xl border border-slate-200 overflow-hidden">
+                        <img src="https://images.unsplash.com/photo-1531403009284-440f080d1e12?auto=format&fit=crop&w=400&q=80" alt="Kegiatan" className="w-full h-full object-cover" />
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -604,15 +642,15 @@ export const BranchesDirectoryView: React.FC = () => {
               <div className="grid grid-cols-3 gap-3 text-center text-xs">
                 <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-200">
                   <span className="text-emerald-700 block">Indeks Kelengkapan</span>
-                  <strong className="text-2xl font-black text-emerald-950">{selectedUnit.completenessScore}%</strong>
+                  <strong className="text-2xl font-black text-emerald-950">{liveSelectedUnit.completenessScore}%</strong>
                 </div>
                 <div className="p-4 bg-teal-50 rounded-2xl border border-teal-200">
                   <span className="text-teal-700 block">Total Anggota</span>
-                  <strong className="text-2xl font-black text-teal-950">{selectedUnit.membersCount}</strong>
+                  <strong className="text-2xl font-black text-teal-950">{liveSelectedUnit.membersCount}</strong>
                 </div>
                 <div className="p-4 bg-blue-50 rounded-2xl border border-blue-200">
                   <span className="text-blue-700 block">Agenda Terlaksana</span>
-                  <strong className="text-2xl font-black text-blue-950">{selectedUnit.activitiesCount}</strong>
+                  <strong className="text-2xl font-black text-blue-950">{liveSelectedUnit.activitiesCount}</strong>
                 </div>
               </div>
             )}
@@ -620,21 +658,35 @@ export const BranchesDirectoryView: React.FC = () => {
             {/* Tab 8: Riwayat Update */}
             {activeDetailTab === 'riwayat' && (
               <div className="space-y-2 text-xs">
-                <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <div className="flex justify-between font-mono text-slate-400 text-[10px]">
-                    <span>{selectedUnit.lastUpdated}</span>
-                    <span>Sistem PAC</span>
+                {activeLogs.length > 0 ? (
+                  activeLogs.slice(0, 5).map((log) => (
+                    <div key={log.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                      <div className="flex justify-between font-mono text-slate-400 text-[10px]">
+                        <span>{log.timestamp}</span>
+                        <span>{log.userName}</span>
+                      </div>
+                      <div className="font-semibold text-slate-800 mt-1">
+                        {log.action}: {log.details || log.target}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                    <div className="flex justify-between font-mono text-slate-400 text-[10px]">
+                      <span>{liveSelectedUnit.lastUpdated}</span>
+                      <span>Sistem PAC</span>
+                    </div>
+                    <div className="font-semibold text-slate-800 mt-1">
+                      Sinkronisasi skor kelengkapan administrasi otomatis
+                    </div>
                   </div>
-                  <div className="font-semibold text-slate-800 mt-1">
-                    Sinkronisasi skor kelengkapan administrasi otomatis
-                  </div>
-                </div>
+                )}
               </div>
             )}
 
             <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
               <a
-                href={buildWaConfirmationUrl(selectedUnit)}
+                href={buildWaConfirmationUrl(liveSelectedUnit)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition"

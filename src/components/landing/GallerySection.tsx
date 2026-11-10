@@ -40,8 +40,18 @@ export const GallerySection: React.FC = () => {
     });
   }
 
-  // Photos from reported activities
+  // Photos from reported activities (coverImage / imageUrl + documentation photos)
   activities.forEach((act) => {
+    const mainImg = act.imageUrl || act.coverImage;
+    if (mainImg && !allPhotos.some((ap) => ap.url === mainImg)) {
+      allPhotos.push({
+        url: mainImg,
+        title: act.title,
+        date: act.date,
+        organizer: act.organizer,
+        category: act.category,
+      });
+    }
     if (act.photos && act.photos.length > 0) {
       act.photos.forEach((p) => {
         if (!allPhotos.some((ap) => ap.url === p)) {

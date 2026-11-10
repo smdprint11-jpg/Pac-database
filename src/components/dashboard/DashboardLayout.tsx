@@ -106,9 +106,11 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ onBackToLandin
     },
     {
       id: 'pac-officers',
-      label: menuLabels.pacOfficers || 'Database Pengurus PAC',
+      label: isBranchUser
+        ? 'Database Pengurus Unit'
+        : menuLabels.pacOfficers || 'Database Pengurus PAC',
       icon: <UserCheck className="w-4 h-4" />,
-      allowed: isAdmin,
+      allowed: true,
     },
     {
       id: 'branches',

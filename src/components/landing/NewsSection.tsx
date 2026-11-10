@@ -22,9 +22,9 @@ export const NewsSection: React.FC = () => {
   const [slideOffset, setSlideOffset] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
-  // Only published articles on public landing page
+  // Show all non-draft articles on public landing page so Admin & Ranting/PK updates appear in real time
   const published = activities.filter(
-    (a) => a.publicationStatus === 'Dipublikasikan' || a.publicationStatus === 'PUBLISHED'
+    (a) => a.publicationStatus !== 'DRAFT'
   );
 
   const filtered = published.filter((a) => {
@@ -36,8 +36,10 @@ export const NewsSection: React.FC = () => {
     'ALL',
     'Kaderisasi',
     'Organisasi',
+    'Keagamaan',
     'Sosial',
     'Kegiatan PAC',
+    'Kegiatan Ranting',
     'Kegiatan PK',
   ];
 

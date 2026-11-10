@@ -20,7 +20,7 @@ interface AboutSectionProps {
 }
 
 export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenDedicatedPage }) => {
-  const { settings, supervisors, alumni } = useApp();
+  const { settings, supervisors, alumni, officers } = useApp();
   const [patronCategory, setPatronCategory] = useState<'ALL' | 'PELINDUNG' | 'PEMBINA'>('ALL');
 
   // Sync category tab if user clicks #pelindung or #pembina
@@ -73,6 +73,35 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenDedicatedPage 
       ? settings.period
       : `Masa Khidmat ${settings.period}`
     : 'Masa Khidmat 2024 - 2026';
+
+  // Synchronize active Ketua IPNU & IPPNU from live PAC officers database with historicalLeaders
+  const pacOfficers = officers.filter((o) => !o.unitId);
+  const ketuaIpnuOfficer = pacOfficers.find(
+    (o) => o.organization === 'IPNU' && o.position.toLowerCase().includes('ketua') && !o.position.toLowerCase().includes('wakil')
+  );
+  const ketuaIppnuOfficer = pacOfficers.find(
+    (o) => o.organization === 'IPPNU' && o.position.toLowerCase().includes('ketua') && !o.position.toLowerCase().includes('wakil')
+  );
+
+  const syncedLeaders = (settings.historicalLeaders || []).map((leader) => {
+    if (leader.status === 'Aktif' && leader.organization === 'IPNU' && ketuaIpnuOfficer) {
+      return {
+        ...leader,
+        name: ketuaIpnuOfficer.fullName,
+        photo: ketuaIpnuOfficer.photoUrl || ketuaIpnuOfficer.avatar || leader.photo,
+        period: ketuaIpnuOfficer.period || leader.period,
+      };
+    }
+    if (leader.status === 'Aktif' && leader.organization === 'IPPNU' && ketuaIppnuOfficer) {
+      return {
+        ...leader,
+        name: ketuaIppnuOfficer.fullName,
+        photo: ketuaIppnuOfficer.photoUrl || ketuaIppnuOfficer.avatar || leader.photo,
+        period: ketuaIppnuOfficer.period || leader.period,
+      };
+    }
+    return leader;
+  });
 
   return (
     <section id="profil" className="py-4 sm:py-14 bg-slate-50 border-b border-slate-200/60">
@@ -231,7 +260,7 @@ export const AboutSection: React.FC<AboutSectionProps> = ({ onOpenDedicatedPage 
 
             {/* Leaders Grid - Compact 2 cols on mobile, 3 on desktop */}
             <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
-              {(settings.historicalLeaders || []).slice(0, 6).map((leader) => {
+              {syncedLeaders.slice(0, 6).map((leader) => {
                 const isIpnu = leader.organization === 'IPNU';
                 return (
                   <div

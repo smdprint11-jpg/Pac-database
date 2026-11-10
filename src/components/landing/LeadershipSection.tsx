@@ -18,72 +18,70 @@ export const LeadershipSection: React.FC = () => {
   const [filterOrg, setFilterOrg] = useState<'ALL' | 'IPNU' | 'IPPNU'>('ALL');
   const [selectedOfficer, setSelectedOfficer] = useState<Officer | null>(null);
 
-  // Slider Bar Foto Pengurus PAC State (Minimal 5 items so 4-item slider glides smoothly one by one)
-  const defaultSlides: PacOfficerSlide[] = [
-    {
-      id: 'pos-1',
-      name: 'M. Ainun Najib, S.Pd',
-      position: 'Ketua PAC IPNU Dukun',
-      organization: 'IPNU',
-      photo: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80',
-      quote: 'Kader santri masa depan adalah mereka yang kokoh dalam Aswaja dan tangkas dalam peradaban digital.',
-    },
-    {
-      id: 'pos-2',
-      name: 'Fatimatus Zahro, S.Ag',
-      position: 'Ketua PAC IPPNU Dukun',
-      organization: 'IPPNU',
-      photo: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80',
-      quote: 'Pelajar putri Nahdliyin adalah benteng moral dan penggerak inovasi sosial di tengah masyarakat.',
-    },
-    {
-      id: 'pos-3',
-      name: 'Ahmad Rizal Fanani',
-      position: 'Sekretaris PAC IPNU Dukun',
-      organization: 'IPNU',
-      photo: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80',
-      quote: 'Tertib administrasi adalah separuh dari keberhasilan gerak roda organisasi.',
-    },
-    {
-      id: 'pos-4',
-      name: 'Nur Lailatul Maghfiroh',
-      position: 'Sekretaris PAC IPPNU Dukun',
-      organization: 'IPPNU',
-      photo: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80',
-      quote: 'Dokumentasi rapi dan data akurat melahirkan keputusan organisasi yang tepat sasaran.',
-    },
-    {
-      id: 'pos-5',
-      name: 'M.Bahrul Ulum',
-      position: 'Bendahara PAC IPNU Dukun',
-      organization: 'IPNU',
-      photo: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80',
-      quote: 'Kemandirian ekonomi organisasi menjadi fondasi utama keberlanjutan syiar pelajar.',
-    },
-    {
-      id: 'pos-6',
-      name: 'Siti Khuzaimah',
-      position: 'Bendahara PAC IPPNU Dukun',
-      organization: 'IPPNU',
-      photo: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80',
-      quote: 'Transparansi dan akuntabilitas pengelolaan kas adalah wujud amanah perkhidmatan.',
-    },
-  ];
+  // Normalize period text so "Masa Khidmat" is NEVER duplicated
+  const formattedPeriod = settings.period
+    ? settings.period.toLowerCase().includes('masa khidmat')
+      ? settings.period
+      : `Masa Khidmat ${settings.period}`
+    : 'Masa Khidmat 2024 - 2026';
 
-  const baseSlides =
-    settings.pacOfficersSlider && settings.pacOfficersSlider.length > 0
-      ? settings.pacOfficersSlider
-      : defaultSlides;
+  // Filter PAC-level officers from live database
+  const pacOfficers = officers
+    .filter((o) => !o.unitId)
+    .sort((a, b) => (a.displayOrder ?? a.orderIndex ?? 99) - (b.displayOrder ?? b.orderIndex ?? 99));
 
-  // Ensure we have enough slides for a smooth 4-card one-by-one track
+  // Build unified 4-photo slider from live PAC officers database + CMS slider settings
+  const officerDerivedSlides: PacOfficerSlide[] = pacOfficers.map((o) => {
+    const matchingCmsSlide = (settings.pacOfficersSlider || []).find(
+      (s) =>
+        s.id === `slide-${o.id}` ||
+        s.name.toLowerCase() === o.fullName.toLowerCase() ||
+        (s.organization === o.organization && s.position.toLowerCase() === o.position.toLowerCase())
+    );
+    return {
+      id: `off-slide-${o.id}`,
+      name: o.fullName,
+      position: o.position,
+      organization: o.organization === 'IPPNU' ? 'IPPNU' : 'IPNU',
+      photo:
+        o.photoUrl ||
+        o.avatar ||
+        matchingCmsSlide?.photo ||
+        (o.organization === 'IPPNU'
+          ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'
+          : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'),
+      quote:
+        o.bio ||
+        o.description ||
+        matchingCmsSlide?.quote ||
+        `Pengurus Harian PAC ${o.organization} Kecamatan Dukun (${formattedPeriod})`,
+    };
+  });
+
+  // Also include any extra custom slides added in CMS that aren't in pacOfficers yet
+  const extraCmsSlides = (settings.pacOfficersSlider || []).filter(
+    (s) =>
+      !officerDerivedSlides.some(
+        (od) => od.name.toLowerCase() === s.name.toLowerCase()
+      )
+  );
+
   const pacSlides: PacOfficerSlide[] =
-    baseSlides.length < 5 ? [...baseSlides, ...defaultSlides.slice(baseSlides.length, 6)] : baseSlides;
+    officerDerivedSlides.length > 0
+      ? [...officerDerivedSlides, ...extraCmsSlides]
+      : settings.pacOfficersSlider || [];
 
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   // Max index when sliding 1-by-1 with 4 visible cards on desktop
   const maxSlideOffset = Math.max(0, pacSlides.length - 4);
+
+  useEffect(() => {
+    if (activeSlideIndex > maxSlideOffset) {
+      setActiveSlideIndex(0);
+    }
+  }, [maxSlideOffset, activeSlideIndex]);
 
   useEffect(() => {
     if (isPaused || maxSlideOffset <= 0) return;
@@ -100,18 +98,6 @@ export const LeadershipSection: React.FC = () => {
   const handlePrevSlide = () => {
     setActiveSlideIndex((prev) => (prev <= 0 ? maxSlideOffset : prev - 1));
   };
-
-  // Normalize period text so "Masa Khidmat" is NEVER duplicated
-  const formattedPeriod = settings.period
-    ? settings.period.toLowerCase().includes('masa khidmat')
-      ? settings.period
-      : `Masa Khidmat ${settings.period}`
-    : 'Masa Khidmat 2024 - 2026';
-
-  // Filter PAC-level officers
-  const pacOfficers = officers
-    .filter((o) => !o.unitId)
-    .sort((a, b) => (a.displayOrder || 99) - (b.displayOrder || 99));
 
   const filteredOfficers = pacOfficers.filter((o) => {
     if (filterOrg === 'ALL') return true;
