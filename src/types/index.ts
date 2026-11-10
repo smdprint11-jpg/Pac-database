@@ -317,6 +317,36 @@ export interface WebsiteSettings {
   activityGallery: ActivityGalleryItem[];
   historicalLeaders?: HistoricalLeader[];
   sectionOrder?: string[];
+  navMenuLabels?: {
+    beranda?: string;
+    profil?: string;
+    pengurus?: string;
+    rantingPk?: string;
+    kegiatan?: string;
+    galeri?: string;
+    kontak?: string;
+    loginBtn?: string;
+  };
+  sectionTitles?: {
+    profilTitle?: string;
+    profilSubtitle?: string;
+    ketuaTitle?: string;
+    ketuaSubtitle?: string;
+    pelindungTitle?: string;
+    pelindungSubtitle?: string;
+    pembinaTitle?: string;
+    pembinaSubtitle?: string;
+    pengurusTitle?: string;
+    pengurusSubtitle?: string;
+    rantingPkTitle?: string;
+    rantingPkSubtitle?: string;
+    kegiatanTitle?: string;
+    kegiatanSubtitle?: string;
+    galeriTitle?: string;
+    galeriSubtitle?: string;
+    kontakTitle?: string;
+    kontakSubtitle?: string;
+  };
 }
 
 export interface ActivityLog {

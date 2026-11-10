@@ -134,10 +134,10 @@ export const AboutSection: React.FC = () => {
                   <span>Rekam Jejak Kepemimpinan</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Foto dan Data Ketua IPNU IPPNU
+                  {settings.sectionTitles?.ketuaTitle || 'Foto dan Data Ketua IPNU IPPNU'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Estafet kepemimpinan dan khidmat para nahkoda Pelajar NU Kecamatan Dukun dari masa ke masa
+                  {settings.sectionTitles?.ketuaSubtitle || 'Estafet kepemimpinan dan khidmat para nahkoda Pelajar NU Kecamatan Dukun dari masa ke masa'}
                 </p>
               </div>
 
@@ -243,8 +243,8 @@ export const AboutSection: React.FC = () => {
           </div>
         </div>
 
-        {/* DEWAN PEMBINA */}
-        <div id="pembina" className="pt-12 scroll-mt-24">
+        {/* DEWAN PELINDUNG */}
+        <div id="pelindung" className="pt-12 scroll-mt-24">
           <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
@@ -253,10 +253,10 @@ export const AboutSection: React.FC = () => {
                   <span>Keluarga Besar Nahdlatul Ulama Dukun</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Dewan Pembina PAC IPNU IPPNU Dukun
+                  {settings.sectionTitles?.pelindungTitle || 'Dewan Pelindung PAC IPNU IPPNU Dukun'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Para masyayikh, sesepuh banom, dan pimpinan badan otonom pengayom kader pelajar santri
+                  {settings.sectionTitles?.pelindungSubtitle || 'Para masyayikh, sesepuh banom, dan pimpinan badan otonom pelindung kader pelajar santri'}
                 </p>
               </div>
             </div>
@@ -315,20 +315,20 @@ export const AboutSection: React.FC = () => {
           </div>
         </div>
 
-        {/* MAJELIS ALUMNI */}
-        <div id="alumni" className="pt-12 scroll-mt-24">
+        {/* DEWAN PEMBINA (MAJELIS ALUMNI) */}
+        <div id="pembina" className="pt-12 scroll-mt-24">
           <div className="bg-white p-8 sm:p-10 rounded-3xl border border-slate-200/80 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-2">
                   <Award className="w-3.5 h-3.5" />
-                  <span>Jaringan & Sinergi</span>
+                  <span>Jaringan & Pembinaan Alumni</span>
                 </div>
                 <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-                  Majelis Alumni PAC IPNU IPPNU Dukun
+                  {settings.sectionTitles?.pembinaTitle || 'Dewan Pembina PAC IPNU IPPNU Dukun'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                  Kiprah pengabdian alumni lintas periode di bidang keagamaan, pendidikan, wirausaha, dan kemasyarakatan
+                  {settings.sectionTitles?.pembinaSubtitle || 'Majelis alumni dan para pembina lintas generasi penggerak kaderisasi pelajar santri'}
                 </p>
               </div>
             </div>
