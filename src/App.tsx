@@ -23,8 +23,35 @@ const MainApp: React.FC = () => {
   const { currentUser, settings } = useApp();
   const [viewMode, setViewMode] = useState<'landing' | 'dashboard'>('landing');
   const [publicPage, setPublicPage] = useState<'home' | 'profil-pac' | 'pelindung-pembina'>('home');
+  const [isPageTransitioning, setIsPageTransitioning] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isLoginTransitioning, setIsLoginTransitioning] = useState(false);
+
+  const handleSmoothPageChange = (
+    targetPage: 'home' | 'profil-pac' | 'pelindung-pembina',
+    scrollSelector?: string
+  ) => {
+    if (targetPage === publicPage && !scrollSelector) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setIsPageTransitioning(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      setPublicPage(targetPage);
+      setTimeout(() => {
+        setIsPageTransitioning(false);
+        if (scrollSelector && scrollSelector.startsWith('#')) {
+          const targetId = scrollSelector.replace('#', '');
+          const el = document.getElementById(targetId);
+          if (el) {
+            const offset = el.getBoundingClientRect().top + window.pageYOffset - 72;
+            window.scrollTo({ top: offset, behavior: 'smooth' });
+          }
+        }
+      }, 60);
+    }, 220);
+  };
 
   // If URL has ?view=dashboard or hash #dashboard / #login / #profil-pac / #pelindung-pembina
   useEffect(() => {
@@ -36,12 +63,10 @@ const MainApp: React.FC = () => {
         setViewMode('dashboard');
       } else if (hash === '#profil-pac') {
         setViewMode('landing');
-        setPublicPage('profil-pac');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        handleSmoothPageChange('profil-pac');
       } else if (hash === '#pelindung-pembina') {
         setViewMode('landing');
-        setPublicPage('pelindung-pembina');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        handleSmoothPageChange('pelindung-pembina');
       }
     };
     handleHash();
@@ -124,7 +149,7 @@ const MainApp: React.FC = () => {
         <DashboardLayout
           onBackToLanding={() => {
             setViewMode('landing');
-            setPublicPage('home');
+            handleSmoothPageChange('home');
           }}
         />
       ) : (
@@ -133,40 +158,31 @@ const MainApp: React.FC = () => {
             onOpenLogin={() => setIsLoginModalOpen(true)}
             onGoToDashboard={() => setViewMode('dashboard')}
             activePublicPage={publicPage}
-            onChangePublicPage={(page) => setPublicPage(page)}
+            onChangePublicPage={(page, href) => handleSmoothPageChange(page, href)}
           />
-          <main className="flex-1">
+          <main
+            className={`flex-1 transition-all duration-300 ease-out ${
+              isPageTransitioning
+                ? 'opacity-0 translate-y-2 scale-[0.995]'
+                : 'opacity-100 translate-y-0 scale-100'
+            }`}
+          >
             {publicPage === 'profil-pac' ? (
               <ProfilPacDedicatedPage
-                onBackHome={() => {
-                  setPublicPage('home');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onSwitchPage={(page) => {
-                  setPublicPage(page);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+                onBackHome={() => handleSmoothPageChange('home')}
+                onSwitchPage={(page) => handleSmoothPageChange(page)}
               />
             ) : publicPage === 'pelindung-pembina' ? (
               <PelindungPembinaDedicatedPage
-                onBackHome={() => {
-                  setPublicPage('home');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                onSwitchPage={(page) => {
-                  setPublicPage(page);
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
+                onBackHome={() => handleSmoothPageChange('home')}
+                onSwitchPage={(page) => handleSmoothPageChange(page)}
               />
             ) : (
               <>
                 <HeroCarousel onOpenLogin={() => setIsLoginModalOpen(true)} />
                 <QuickStats />
                 <AboutSection
-                  onOpenDedicatedPage={(page) => {
-                    setPublicPage(page);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
+                  onOpenDedicatedPage={(page) => handleSmoothPageChange(page)}
                 />
                 <LeadershipSection />
                 <DirectorySection />

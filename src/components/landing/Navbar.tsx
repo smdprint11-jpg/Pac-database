@@ -6,7 +6,7 @@ interface NavbarProps {
   onOpenLogin: () => void;
   onGoToDashboard?: () => void;
   activePublicPage?: 'home' | 'profil-pac' | 'pelindung-pembina';
-  onChangePublicPage?: (page: 'home' | 'profil-pac' | 'pelindung-pembina') => void;
+  onChangePublicPage?: (page: 'home' | 'profil-pac' | 'pelindung-pembina', href?: string) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -54,26 +54,11 @@ export const Navbar: React.FC<NavbarProps> = ({
       if (onChangePublicPage) {
         onChangePublicPage(targetPage);
       }
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     if (activePublicPage !== 'home' && onChangePublicPage) {
-      onChangePublicPage('home');
-      setTimeout(() => {
-        if (href.startsWith('#')) {
-          const targetId = href.replace('#', '');
-          const targetElement = document.getElementById(targetId);
-          if (targetElement) {
-            const navHeight = 72;
-            const elementPosition = targetElement.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - navHeight;
-            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
-          } else {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          }
-        }
-      }, 80);
+      onChangePublicPage('home', href);
       return;
     }
 

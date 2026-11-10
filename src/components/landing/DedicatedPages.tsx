@@ -12,6 +12,10 @@ import {
   Search,
   MessageCircle,
   Home,
+  Phone,
+  Mail,
+  IdCard,
+  Sparkles,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { LeadershipSection } from './LeadershipSection';
@@ -32,17 +36,17 @@ export const BreadcrumbBar: React.FC<{
   const separator = bc.separator || '/';
 
   return (
-    <div className="bg-emerald-950 text-white pt-20 pb-6 sm:pt-24 sm:pb-8 border-b border-emerald-900/60 relative overflow-hidden">
+    <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-slate-950 text-white pt-20 pb-6 sm:pt-24 sm:pb-8 border-b border-emerald-800/50 relative overflow-hidden">
       <div className="absolute inset-0 opacity-10 pointer-events-none bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:20px_20px]" />
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 relative z-10">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
           <div>
             {showBreadcrumb && (
               <nav className="flex items-center gap-2 text-xs font-medium text-emerald-300/90 mb-2">
                 <button
                   type="button"
                   onClick={onBackHome}
-                  className="inline-flex items-center gap-1 hover:text-white transition cursor-pointer"
+                  className="inline-flex items-center gap-1 hover:text-white transition-all duration-200 cursor-pointer"
                 >
                   <Home className="w-3.5 h-3.5" />
                   <span>{homeLabel}</span>
@@ -61,7 +65,7 @@ export const BreadcrumbBar: React.FC<{
           <button
             type="button"
             onClick={onBackHome}
-            className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white border border-white/15 text-xs font-bold transition cursor-pointer"
+            className="self-start sm:self-auto inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-emerald-600 text-white border border-white/20 hover:border-emerald-400 text-xs font-bold transition-all duration-300 shadow-sm hover:-translate-x-0.5 active:scale-95 cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Kembali ke {settings.dashboardMenuLabels?.menuUtamaBtn || 'MENU UTAMA'}</span>
@@ -76,7 +80,7 @@ export const ProfilPacDedicatedPage: React.FC<DedicatedPageProps> = ({
   onBackHome,
   onSwitchPage,
 }) => {
-  const { settings } = useApp();
+  const { settings, officers } = useApp();
   const historicalLeaders = settings.historicalLeaders || [];
   const titles = settings.sectionTitles || {};
   const cleanPeriod = settings.period
@@ -85,17 +89,86 @@ export const ProfilPacDedicatedPage: React.FC<DedicatedPageProps> = ({
       : `Masa Khidmat ${settings.period}`
     : 'Masa Khidmat 2024 - 2026';
 
+  // Ambil Data Ketua PAC IPNU & Ketua PAC IPPNU dari database Pengurus PAC + Historical Leaders
+  const pacOfficers = officers.filter((o) => !o.unitId);
+  const ketuaIpnuOfficer = pacOfficers.find(
+    (o) => o.organization === 'IPNU' && o.position.toLowerCase().includes('ketua')
+  );
+  const ketuaIppnuOfficer = pacOfficers.find(
+    (o) => o.organization === 'IPPNU' && o.position.toLowerCase().includes('ketua')
+  );
+
+  const activeLeaderIpnu = historicalLeaders.find(
+    (l) => l.organization === 'IPNU' && l.status === 'Aktif'
+  );
+  const activeLeaderIppnu = historicalLeaders.find(
+    (l) => l.organization === 'IPPNU' && l.status === 'Aktif'
+  );
+
+  const primaryChairs = [
+    {
+      id: 'chair-ipnu',
+      organization: 'IPNU' as const,
+      roleTitle: ketuaIpnuOfficer?.position || 'Ketua PAC IPNU Dukun',
+      fullName:
+        ketuaIpnuOfficer?.fullName || activeLeaderIpnu?.name || 'M. Ainun Najib, S.Pd',
+      photo:
+        ketuaIpnuOfficer?.avatar ||
+        ketuaIpnuOfficer?.photoUrl ||
+        activeLeaderIpnu?.photo ||
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500&auto=format&fit=crop&q=80',
+      nia: ketuaIpnuOfficer?.nia || '13.07.05.2021.0001',
+      period: ketuaIpnuOfficer?.period || activeLeaderIpnu?.period || cleanPeriod,
+      originUnit: activeLeaderIpnu?.originUnit || 'PR IPNU Dukun',
+      phone: ketuaIpnuOfficer?.phone || settings.phone || '0812-3456-7890',
+      email: ketuaIpnuOfficer?.email || settings.email || 'pacipnudukun@gmail.com',
+      quote:
+        activeLeaderIpnu?.visionOrQuote ||
+        ketuaIpnuOfficer?.description ||
+        'Mengokohkan basis kaderisasi pelajar santri yang unggul dalam keilmuan, tertib organisasi, dan berdaya saing digital.',
+      achievements: activeLeaderIpnu?.achievements || [
+        'Digitalisasi Database Terpadu Ranting & Komisariat se-Kecamatan Dukun',
+        'Penguatan Kurikulum Kaderisasi MAKESTA & LAKMUD Terstandar',
+      ],
+    },
+    {
+      id: 'chair-ippnu',
+      organization: 'IPPNU' as const,
+      roleTitle: ketuaIppnuOfficer?.position || 'Ketua PAC IPPNU Dukun',
+      fullName:
+        ketuaIppnuOfficer?.fullName || activeLeaderIppnu?.name || 'Fatimatus Zahro, S.Ag',
+      photo:
+        ketuaIppnuOfficer?.avatar ||
+        ketuaIppnuOfficer?.photoUrl ||
+        activeLeaderIppnu?.photo ||
+        'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=80',
+      nia: ketuaIppnuOfficer?.nia || '23.07.05.2021.0002',
+      period: ketuaIppnuOfficer?.period || activeLeaderIppnu?.period || cleanPeriod,
+      originUnit: activeLeaderIppnu?.originUnit || 'PR IPPNU Sumber',
+      phone: ketuaIppnuOfficer?.phone || settings.phone || '0812-3456-7891',
+      email: ketuaIppnuOfficer?.email || settings.email || 'pacippnudukun@gmail.com',
+      quote:
+        activeLeaderIppnu?.visionOrQuote ||
+        ketuaIppnuOfficer?.description ||
+        'Mewujudkan pelajar putri Nahdliyin yang berakhlakul karimah, mandiri, kreatif, dan pelopor literasi di lingkungan madrasah serta desa.',
+      achievements: activeLeaderIppnu?.achievements || [
+        'Pemberdayaan Kemandirian Pelajar Putri & Forum Kajian Keputrian Ranting',
+        'Sinkronisasi Tertib Administrasi E-SP IPPNU se-Kecamatan Dukun',
+      ],
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <BreadcrumbBar
         currentPageLabel={
           settings.navMenuLabels?.profilSubSejarah ||
-          'Profil, Sejarah, Data Ketua & Pengurus Harian PAC'
+          'Profil, Sejarah & Data Ketua PAC'
         }
         onBackHome={onBackHome}
       />
 
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-12">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-10">
         {/* Quick Switch Banner */}
         <div className="flex flex-wrap items-center justify-between gap-3 bg-white p-3.5 sm:p-4 rounded-2xl border border-emerald-100 shadow-xs">
           <div className="flex items-center gap-2.5">
@@ -104,27 +177,29 @@ export const ProfilPacDedicatedPage: React.FC<DedicatedPageProps> = ({
             </div>
             <div>
               <p className="text-xs sm:text-sm font-bold text-slate-900">
-                Halaman Lengkap Profil & Kepengurusan PAC IPNU IPPNU Dukun
+                Halaman Lengkap Profil, Sejarah & Data Ketua PAC IPNU IPPNU Dukun
               </p>
               <p className="text-[11px] text-slate-500">
-                Memuat Sejarah Organisasi, Visi-Misi, Foto & Data Ketua IPNU IPPNU, serta Pengurus Harian PAC
+                Memuat Sejarah Organisasi, Visi-Misi, Foto & Biodata Ketua PAC IPNU IPPNU, serta Pengurus Harian PAC
               </p>
             </div>
           </div>
-          {onSwitchPage && (
-            <button
-              type="button"
-              onClick={() => onSwitchPage('pelindung-pembina')}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition cursor-pointer"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
-              <span>Lihat Halaman Dewan Pelindung & Pembina →</span>
-            </button>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {onSwitchPage && (
+              <button
+                type="button"
+                onClick={() => onSwitchPage('pelindung-pembina')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition-all duration-200 cursor-pointer"
+              >
+                <ShieldCheck className="w-3.5 h-3.5 text-emerald-700" />
+                <span>Lihat Dewan Pelindung & Pembina →</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Section 1: Sejarah & Visi Misi */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-7 items-start">
           <div className="lg:col-span-6 space-y-4">
             <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200/80 shadow-xs">
               <div className="flex items-center space-x-3 mb-3">
@@ -203,83 +278,210 @@ export const ProfilPacDedicatedPage: React.FC<DedicatedPageProps> = ({
           </div>
         </div>
 
-        {/* Section 2: Foto & Data Ketua IPNU IPPNU */}
-        <div className="bg-white rounded-2xl p-4 sm:p-7 border border-slate-200/80 shadow-xs">
-          <div className="text-center max-w-3xl mx-auto mb-6">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200/60 mb-2">
-              <Award className="w-3.5 h-3.5" /> Pucuk Pimpinan PAC
+        {/* Section 2: SOROTAN UTAMA FOTO & DATA LENGKAP KETUA PAC IPNU & IPPNU */}
+        <div className="bg-white rounded-3xl p-4 sm:p-7 border border-emerald-200/80 shadow-sm space-y-6">
+          <div className="text-center max-w-3xl mx-auto">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-200 mb-2">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-700" /> Foto & Data Lengkap Ketua PAC
             </span>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-              {titles.ketuaTitle || 'Foto dan Data Ketua IPNU IPPNU'}
+            <h2 className="text-xl sm:text-3xl font-extrabold text-slate-900">
+              {titles.ketuaTitle || 'Foto dan Data Ketua PAC IPNU & IPPNU Dukun'}
             </h2>
             <p className="text-xs sm:text-sm text-slate-600 mt-1">
               {titles.ketuaSubtitle ||
-                'Profil Ketua Mandataris Konferancab PAC IPNU & IPPNU Kecamatan Dukun beserta jejak kepemimpinan.'}
+                `Profil Mandataris Ketua Pimpinan Anak Cabang IPNU & IPPNU Kecamatan Dukun (${cleanPeriod})`}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {historicalLeaders.map((leader) => (
-              <div
-                key={leader.id}
-                className={`rounded-2xl p-4 border transition-all ${
-                  leader.status === 'Aktif'
-                    ? 'bg-gradient-to-br from-emerald-50/90 via-white to-amber-50/40 border-emerald-300 shadow-sm'
-                    : 'bg-slate-50/70 border-slate-200/80 hover:bg-white'
-                }`}
-              >
-                <div className="flex items-center gap-3.5 mb-3">
-                  <img
-                    src={
-                      leader.photo ||
-                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'
-                    }
-                    alt={leader.name}
-                    className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-sm shrink-0"
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
+          {/* 2 Featured Large Cards: Ketua PAC IPNU & Ketua PAC IPPNU */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {primaryChairs.map((chair) => {
+              const isIpnu = chair.organization === 'IPNU';
+              const cleanWa = chair.phone.replace(/[^0-9]/g, '');
+              const waUrl = cleanWa
+                ? `https://wa.me/${cleanWa.startsWith('0') ? '62' + cleanWa.slice(1) : cleanWa}`
+                : '';
+
+              return (
+                <div
+                  key={chair.id}
+                  className={`rounded-2xl p-4 sm:p-5 border transition-all duration-300 flex flex-col sm:flex-row gap-4 sm:gap-5 ${
+                    isIpnu
+                      ? 'bg-gradient-to-br from-emerald-50/80 via-white to-slate-50 border-emerald-300 shadow-xs'
+                      : 'bg-gradient-to-br from-amber-50/70 via-white to-emerald-50/40 border-amber-300 shadow-xs'
+                  }`}
+                >
+                  {/* Pas Foto Resmi Ketua PAC */}
+                  <div className="w-32 sm:w-40 shrink-0 mx-auto sm:mx-0">
+                    <div className="aspect-[3/4] rounded-2xl overflow-hidden border-2 border-white shadow-md bg-slate-200 relative">
+                      <img
+                        src={chair.photo}
+                        alt={chair.fullName}
+                        className="w-full h-full object-cover"
+                      />
                       <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
-                          leader.organization === 'IPNU'
-                            ? 'bg-emerald-700 text-white'
-                            : 'bg-amber-500 text-slate-950'
+                        className={`absolute bottom-2 inset-x-2 text-center py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow ${
+                          isIpnu
+                            ? 'bg-emerald-700/95 text-white'
+                            : 'bg-amber-500/95 text-slate-950'
                         }`}
                       >
-                        KETUA {leader.organization}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                          leader.status === 'Aktif'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {leader.status}
+                        KETUA PAC {chair.organization}
                       </span>
                     </div>
-                    <h4 className="font-bold text-slate-900 text-sm leading-snug truncate">
-                      {leader.name}
-                    </h4>
-                    <p className="text-[11px] font-semibold text-emerald-700">
-                      Masa Khidmat {leader.period.replace(/masa khidmat/i, '').trim()}
-                    </p>
+                  </div>
+
+                  {/* Biodata Lengkap Ketua PAC */}
+                  <div className="flex-1 flex flex-col justify-between space-y-3">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          Mandataris Aktif
+                        </span>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                          {chair.period.toLowerCase().includes('masa khidmat')
+                            ? chair.period
+                            : `Masa Khidmat ${chair.period}`}
+                        </span>
+                      </div>
+
+                      <h3 className="text-base sm:text-xl font-black text-slate-900 leading-snug">
+                        {chair.fullName}
+                      </h3>
+                      <p className="text-xs font-bold text-emerald-700">{chair.roleTitle}</p>
+
+                      {/* Tabel Ringkas Biodata */}
+                      <div className="mt-3 space-y-1.5 text-xs bg-white/90 p-3 rounded-xl border border-slate-200/70">
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <IdCard className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="text-slate-500">NIA:</span>
+                          <span className="font-mono font-bold text-slate-900">{chair.nia}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-slate-700">
+                          <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span className="text-slate-500">Asal Pangkalan:</span>
+                          <span className="font-semibold text-slate-900">{chair.originUnit}</span>
+                        </div>
+                        {chair.phone && (
+                          <div className="flex items-center gap-2 text-slate-700">
+                            <Phone className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span className="text-slate-500">Kontak:</span>
+                            <span className="font-mono text-slate-800">{chair.phone}</span>
+                          </div>
+                        )}
+                        {chair.email && (
+                          <div className="flex items-center gap-2 text-slate-700">
+                            <Mail className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            <span className="font-mono text-[11px] text-slate-700 truncate">
+                              {chair.email}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
+                      {chair.quote && (
+                        <p className="mt-2.5 text-xs text-slate-600 italic bg-white/80 p-2.5 rounded-xl border border-slate-100 leading-relaxed">
+                          &ldquo;{chair.quote}&rdquo;
+                        </p>
+                      )}
+                    </div>
+
+                    {waUrl && (
+                      <div className="pt-2 flex justify-end">
+                        <a
+                          href={waUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>Hubungi Ketua {chair.organization}</span>
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
-                {leader.originUnit && (
-                  <p className="text-[11px] text-slate-500 mb-2 flex items-center gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span>Asal Pangkalan: {leader.originUnit}</span>
-                  </p>
-                )}
-                {leader.visionOrQuote && (
-                  <p className="text-xs text-slate-600 italic bg-white/90 p-2.5 rounded-xl border border-slate-100">
-                    &ldquo;{leader.visionOrQuote}&rdquo;
-                  </p>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
+
+          {/* Daftar Riwayat & Estafet Ketua PAC IPNU IPPNU */}
+          {historicalLeaders.length > 0 && (
+            <div className="pt-5 border-t border-slate-100 space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm sm:text-base font-extrabold text-slate-800 flex items-center gap-2">
+                  <Award className="w-4 h-4 text-amber-600" />
+                  <span>Data Ketua PAC IPNU & IPPNU Lintas Masa Khidmat</span>
+                </h3>
+                <span className="text-[11px] font-semibold text-slate-500">
+                  Total {historicalLeaders.length} Data Ketua
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+                {historicalLeaders.map((leader) => (
+                  <div
+                    key={leader.id}
+                    className={`rounded-2xl p-3.5 border transition-all ${
+                      leader.status === 'Aktif'
+                        ? 'bg-emerald-50/60 border-emerald-300 shadow-2xs'
+                        : 'bg-slate-50/70 border-slate-200/80 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-2.5">
+                      <img
+                        src={
+                          leader.photo ||
+                          'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80'
+                        }
+                        alt={leader.name}
+                        className="w-14 h-16 rounded-xl object-cover border border-white shadow-xs shrink-0"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1 flex-wrap mb-0.5">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase ${
+                              leader.organization === 'IPNU'
+                                ? 'bg-emerald-700 text-white'
+                                : 'bg-amber-500 text-slate-950'
+                            }`}
+                          >
+                            KETUA {leader.organization}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                              leader.status === 'Aktif'
+                                ? 'bg-emerald-100 text-emerald-800'
+                                : 'bg-slate-200 text-slate-600'
+                            }`}
+                          >
+                            {leader.status}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-slate-900 text-xs sm:text-sm leading-snug truncate">
+                          {leader.name}
+                        </h4>
+                        <p className="text-[11px] font-semibold text-emerald-700">
+                          Masa Khidmat {leader.period.replace(/masa khidmat/i, '').trim()}
+                        </p>
+                      </div>
+                    </div>
+                    {leader.originUnit && (
+                      <p className="text-[11px] text-slate-500 mb-1.5 flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" />
+                        <span>Asal Pangkalan: {leader.originUnit}</span>
+                      </p>
+                    )}
+                    {leader.visionOrQuote && (
+                      <p className="text-[11px] text-slate-600 italic bg-white/90 p-2 rounded-xl border border-slate-100 line-clamp-2">
+                        &ldquo;{leader.visionOrQuote}&rdquo;
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -338,7 +540,7 @@ export const PelindungPembinaDedicatedPage: React.FC<DedicatedPageProps> = ({
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-14">
+    <div className="min-h-screen bg-slate-50 pb-14 animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
       <BreadcrumbBar
         currentPageLabel={
           settings.navMenuLabels?.profilSubPelindungPembina ||
@@ -367,7 +569,7 @@ export const PelindungPembinaDedicatedPage: React.FC<DedicatedPageProps> = ({
             <button
               type="button"
               onClick={() => onSwitchPage('profil-pac')}
-              className="self-start lg:self-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 text-xs font-bold transition cursor-pointer shrink-0"
+              className="self-start lg:self-auto inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-emerald-50 text-slate-700 hover:text-emerald-800 border border-slate-200 text-xs font-bold transition-all duration-200 cursor-pointer shrink-0"
             >
               <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
               <span>Buka Profil, Sejarah & Data Ketua →</span>
