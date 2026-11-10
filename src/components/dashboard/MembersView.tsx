@@ -21,7 +21,9 @@ import {
   CheckCircle2,
   Sparkles,
   Lock,
+  FileText,
 } from 'lucide-react';
+import { exportMembersToPdf } from '../../utils/pdfExport';
 
 export const MembersView: React.FC = () => {
   const {
@@ -33,7 +35,9 @@ export const MembersView: React.FC = () => {
     deleteMember,
     bulkAddMembers,
     showToast,
+    settings,
   } = useApp();
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const isBranchUser = currentUser?.role === 'user_ranting' || currentUser?.role === 'user_pk';
   const targetUnitId = currentUser?.targetUnitId;
@@ -268,8 +272,34 @@ export const MembersView: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
+            disabled={isExportingPdf || filteredMembers.length === 0}
+            onClick={async () => {
+              try {
+                setIsExportingPdf(true);
+                showToast('Menyiapkan dokumen PDF beserta pas foto anggota...', 'info');
+                const scopeLabel = isBranchUser
+                  ? targetUnitName || 'Pangkalan Ranting/PK'
+                  : unitFilter !== 'ALL'
+                  ? units.find((u) => u.id === unitFilter)?.name || 'Unit Terpilih'
+                  : 'Seluruh Pangkalan PAC & Ranting/PK';
+                await exportMembersToPdf(filteredMembers, settings, scopeLabel);
+                showToast('PDF Data Real & Foto Anggota berhasil diunduh', 'success');
+              } catch {
+                showToast('Gagal mengekspor PDF', 'error');
+              } finally {
+                setIsExportingPdf(false);
+              }
+            }}
+            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+          >
+            <FileText className="w-4 h-4" />
+            <span>{isExportingPdf ? 'Memproses PDF...' : 'Export PDF (Data & Foto)'}</span>
+          </button>
+
+          <button
             onClick={handleExportCsv}
-            className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition"
+            className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
           >
             <Download className="w-4 h-4 text-slate-500" />
             <span>Ekspor CSV</span>
@@ -693,9 +723,17 @@ export const MembersView: React.FC = () => {
               {/* Card Header */}
               <div className="flex items-center justify-between pb-3 border-b border-white/20">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-10 h-10 rounded-xl bg-white text-emerald-800 font-bold flex items-center justify-center font-serif text-base shadow-sm">
-                    NU
-                  </div>
+                  {settings.navbarLogoUrl || settings.logoUrl ? (
+                    <img
+                      src={settings.navbarLogoUrl || settings.logoUrl}
+                      alt="Logo"
+                      className="w-10 h-10 rounded-xl bg-white object-contain p-1 shadow-sm"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-white text-emerald-800 font-bold flex items-center justify-center font-serif text-base shadow-sm">
+                      NU
+                    </div>
+                  )}
                   <div>
                     <div className="text-[10px] font-bold tracking-wider uppercase text-amber-300">
                       KARTU TANDA ANGGOTA

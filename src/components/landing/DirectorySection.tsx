@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export const DirectorySection: React.FC = () => {
-  const { units } = useApp();
+  const { units, settings } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState<'ALL' | 'RANTING' | 'KOMISARIAT'>('ALL');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'AKTIF' | 'PERLU_PERHATIAN'>('ALL');
@@ -69,19 +69,20 @@ export const DirectorySection: React.FC = () => {
   );
 
   return (
-    <section id="ranting-pk" className="py-20 bg-slate-50 border-b border-slate-200/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="ranting-pk" className="py-10 sm:py-16 bg-slate-50 border-b border-slate-200/60">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-3">
+        <div className="text-center max-w-3xl mx-auto mb-8">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase tracking-wider mb-2">
             <Building2 className="w-3.5 h-3.5" />
             <span>Direktori Basis & Pangkalan</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-            Pimpinan Ranting Desa & Pimpinan Komisariat
+          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            {settings.sectionTitles?.rantingPkTitle || 'Pimpinan Ranting Desa & Pimpinan Komisariat'}
           </h2>
-          <p className="mt-3 text-sm text-slate-600 leading-relaxed">
-            Pemantauan langsung kelengkapan database administrasi, status surat pengesahan (SP), dan profil pimpinan di 18 Ranting dan 6 Komisariat se-Kecamatan Dukun.
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            {settings.sectionTitles?.rantingPkSubtitle ||
+              'Pemantauan langsung kelengkapan database administrasi, status surat pengesahan (SP), dan profil pimpinan di 18 Ranting dan 6 Komisariat se-Kecamatan Dukun.'}
           </p>
         </div>
 
@@ -187,11 +188,11 @@ export const DirectorySection: React.FC = () => {
           )}
         </div>
 
-        {/* Directory Grid: 4 items per slide */}
+        {/* Directory Grid: 4 items per slide (2x2 on mobile so no long scrolling!) */}
         <div
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5"
         >
           {displayedUnits.map((unit) => {
             const gradeStyle = getGradeBadgeColor(unit.completenessGrade);
@@ -202,7 +203,7 @@ export const DirectorySection: React.FC = () => {
               <div
                 key={unit.id}
                 onClick={() => setSelectedUnit(unit)}
-                className="bg-white rounded-2xl border border-slate-200/80 hover:border-emerald-300 p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 hover:border-emerald-300 p-3 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
               >
                 <div>
                   {/* Top Bar with Badges */}

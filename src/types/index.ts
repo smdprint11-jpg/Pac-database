@@ -320,13 +320,58 @@ export interface WebsiteSettings {
   navMenuLabels?: {
     beranda?: string;
     profil?: string;
+    profilSubSejarah?: string;
+    profilSubPelindungPembina?: string;
     pengurus?: string;
     rantingPk?: string;
     kegiatan?: string;
     galeri?: string;
     kontak?: string;
     loginBtn?: string;
+    openDashboardBtn?: string;
   };
+  dashboardMenuLabels?: {
+    menuUtamaBtn?: string;
+    overview?: string;
+    pacOfficers?: string;
+    branches?: string;
+    members?: string;
+    supervisors?: string;
+    spDocuments?: string;
+    activities?: string;
+    scoring?: string;
+    users?: string;
+    websiteSettings?: string;
+    logs?: string;
+  };
+  heroCtaConfig?: {
+    badgeText?: string;
+    primaryBtnText?: string;
+    primaryBtnLink?: string;
+    secondaryBtnText?: string;
+    tertiaryBtnText?: string;
+    tertiaryBtnLink?: string;
+    highlight1?: string;
+    highlight2?: string;
+    highlight3?: string;
+    bannerCtaTitle?: string;
+    bannerCtaSubtitle?: string;
+    bannerCtaButtonText?: string;
+  };
+  breadcrumbConfig?: {
+    showBreadcrumb?: boolean;
+    homeLabel?: string;
+    separator?: string;
+  };
+  typographyConfig?: {
+    fontFamily?: string;
+    customFontName?: string;
+    customFontDataUrl?: string;
+    bodyFontSize?: string;
+    lineHeight?: string;
+    paragraphAlign?: 'left' | 'justify' | 'center';
+  };
+  customCss?: string;
   sectionTitles?: {
     profilTitle?: string;
     profilSubtitle?: string;

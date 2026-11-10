@@ -26,6 +26,7 @@ import {
   Activity as ActivityIcon,
   BarChart3,
   Layers,
+  MessageCircle,
 } from 'lucide-react';
 
 export const BranchesDirectoryView: React.FC = () => {
@@ -40,7 +41,20 @@ export const BranchesDirectoryView: React.FC = () => {
     updateUnit,
     deleteUnit,
     currentUser,
+    settings,
   } = useApp();
+
+  const rawPacPhone = (settings.footerPhone || settings.phone || '6281234567890').replace(/[^0-9]/g, '');
+  const pacWaNumber = rawPacPhone.startsWith('0') ? '62' + rawPacPhone.slice(1) : rawPacPhone;
+
+  const buildWaConfirmationUrl = (unit: UnitOrganization) => {
+    const unitMembersCount = members.filter((m) => m.unitId === unit.id).length || unit.membersCount;
+    const unitOfficersCount = officers.filter((o) => o.unitId === unit.id).length || unit.officersCount;
+    const text = encodeURIComponent(
+      `Assalamu'alaikum Wr. Wb.\nKepada Yth. Admin Sekretariat *PAC IPNU IPPNU Kecamatan Dukun*,\n\nKami dari pimpinan pangkalan *${unit.name}* (${unit.villageOrSchool}) mengonfirmasi telah selesai mengisi dan memperbarui data di Sistem Database Organisasi:\n• Ketua IPNU: ${unit.leaderIpnu || '-'}\n• Ketua IPPNU: ${unit.leaderIppnu || '-'}\n• Total Anggota Terdata: ${unitMembersCount} Kader\n• Total Pengurus: ${unitOfficersCount} Orang\n• Status SP: ${unit.spIpnuStatus === 'AKTIF' ? 'SP Sah & Aktif' : unit.spIpnuStatus}\n• Indeks Kelengkapan: *${unit.completenessScore}% (${unit.completenessGrade})*\n\nMohon kiranya dilakukan pengecekan dan verifikasi. Terima kasih.\n*Belajar, Berjuang, Bertaqwa!*`
+    );
+    return `https://wa.me/${pacWaNumber}?text=${text}`;
+  };
 
   const isAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'admin_pac';
   const isBranchUser = currentUser?.role === 'user_ranting' || currentUser?.role === 'user_pk';
@@ -341,16 +355,26 @@ export const BranchesDirectoryView: React.FC = () => {
                     </td>
                     <td className="py-3 px-4 text-center">
                       <div className="flex items-center justify-center gap-1">
+                        <a
+                          href={buildWaConfirmationUrl(unit)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold inline-flex items-center gap-1 transition shadow-2xs"
+                          title="Konfirmasi Pengisian Data ke WhatsApp PAC"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span className="hidden xl:inline">Konfirmasi WA</span>
+                        </a>
                         <button
                           onClick={() => handleOpenDetailModal(unit)}
-                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition"
+                          className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 transition cursor-pointer"
                           title="Buka 8 Tab Detail Ranting"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleOpenEdit(unit)}
-                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition"
+                          className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition cursor-pointer"
                           title="Edit Data Pangkalan"
                         >
                           <Edit className="w-4 h-4" />
@@ -358,7 +382,7 @@ export const BranchesDirectoryView: React.FC = () => {
                         {isAdmin && (
                           <button
                             onClick={() => setDeleteTargetId(unit.id)}
-                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition"
+                            className="p-1.5 rounded-lg text-red-500 hover:bg-red-50 transition cursor-pointer"
                             title="Hapus Pangkalan"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -608,12 +632,23 @@ export const BranchesDirectoryView: React.FC = () => {
               </div>
             )}
 
-            <button
-              onClick={() => setDetailModalOpen(false)}
-              className="w-full py-2.5 rounded-xl border border-slate-300 font-semibold text-xs text-slate-700 hover:bg-slate-100"
-            >
-              Tutup Rincian
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-2 pt-2 border-t border-slate-100">
+              <a
+                href={buildWaConfirmationUrl(selectedUnit)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full sm:flex-1 py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition"
+              >
+                <MessageCircle className="w-4 h-4" />
+                <span>Konfirmasi Pengisian Data ke WhatsApp PAC</span>
+              </a>
+              <button
+                onClick={() => setDetailModalOpen(false)}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 font-semibold text-xs text-slate-700 hover:bg-slate-100 cursor-pointer"
+              >
+                Tutup Rincian
+              </button>
+            </div>
           </div>
         </Modal>
       )}

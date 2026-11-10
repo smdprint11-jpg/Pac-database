@@ -37,22 +37,32 @@ export const Footer: React.FC = () => {
   const footerDescription = settings.footerDescription || settings.footerText;
   const copyright = settings.footerCopyright || '© 2026 PAC IPNU IPPNU DUKUN. Hak Cipta Dilindungi.';
 
+  const appLogo = settings.navbarLogoUrl || settings.logoUrl;
+
   return (
-    <footer className="bg-slate-950 text-slate-300 pt-16 pb-12 border-t border-slate-800">
+    <footer className="bg-slate-950 text-slate-300 pt-10 sm:pt-16 pb-8 sm:pb-12 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 pb-12 border-b border-slate-800/80">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 sm:gap-10 pb-8 sm:pb-12 border-b border-slate-800/80">
           {/* Identity */}
           <div className="lg:col-span-5 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-900/40 font-serif">
-                NU
-              </div>
+              {appLogo ? (
+                <img
+                  src={appLogo}
+                  alt={settings.siteName || 'Logo Organisasi'}
+                  className="w-10 h-10 rounded-xl object-contain bg-white p-1 shadow-lg shadow-emerald-900/40 shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-emerald-900/40 font-serif shrink-0">
+                  NU
+                </div>
+              )}
               <div>
                 <span className="text-lg font-black text-white tracking-tight block">
-                  {settings.siteName || settings.siteTitle || 'PELAJAR NU DUKUN'}
+                  {settings.navbarBrandTitle || settings.siteName || settings.siteTitle || 'PELAJAR NU DUKUN'}
                 </span>
                 <span className="text-xs text-emerald-400 font-semibold block">
-                  {settings.organization || settings.organizationName || 'PAC IPNU IPPNU DUKUN'}
+                  {settings.navbarBrandSubtitle || settings.organization || settings.organizationName || 'PAC IPNU IPPNU DUKUN'}
                 </span>
               </div>
             </div>

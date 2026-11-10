@@ -85,20 +85,21 @@ export const GallerySection: React.FC = () => {
   }
 
   return (
-    <section id="galeri" className="py-20 bg-slate-50 border-b border-slate-200/60 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="galeri" className="py-10 sm:py-16 bg-slate-50 border-b border-slate-200/60 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold uppercase tracking-wider mb-3">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase tracking-wider mb-2">
               <Camera className="w-3.5 h-3.5" />
-              <span>Dokumentasi Visual 1 Baris • Slideshow Otomatis</span>
+              <span>Dokumentasi Visual • 4 Slide Terkumpul</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-              Galeri Kegiatan Pelajar NU Dukun
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+              {settings.sectionTitles?.galeriTitle || 'Galeri Kegiatan Pelajar NU Dukun'}
             </h2>
-            <p className="mt-2 text-sm text-slate-600 leading-relaxed">
-              Sorotan potret kebersamaan, semangat belajar, perjuangan, dan khidmat para kader santri di berbagai penjuru ranting dan madrasah se-Kecamatan Dukun.
+            <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+              {settings.sectionTitles?.galeriSubtitle ||
+                'Sorotan potret kebersamaan, semangat belajar, perjuangan, dan khidmat para kader santri di berbagai penjuru ranting dan madrasah se-Kecamatan Dukun.'}
             </p>
           </div>
 

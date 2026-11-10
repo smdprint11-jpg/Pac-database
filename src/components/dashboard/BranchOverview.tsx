@@ -15,6 +15,7 @@ import {
   ShieldCheck,
   Upload,
   UserPlus,
+  MessageCircle,
 } from 'lucide-react';
 
 interface BranchOverviewProps {
@@ -22,7 +23,7 @@ interface BranchOverviewProps {
 }
 
 export const BranchOverview: React.FC<BranchOverviewProps> = ({ onNavigateTab }) => {
-  const { currentUser, units, members, officers, spDocuments, activities, weights } = useApp();
+  const { currentUser, units, members, officers, spDocuments, activities, weights, settings } = useApp();
 
   // Find the unit managed by this user
   const unit = units.find((u) => u.id === currentUser?.targetUnitId) || units[0];
@@ -104,10 +105,10 @@ export const BranchOverview: React.FC<BranchOverviewProps> = ({ onNavigateTab })
             Kelola data kader santri, ajukan perpanjangan SP pengurus, dan laporkan kegiatan pimpinan ranting/komisariat secara mandiri dan terintegrasi dengan PAC Dukun.
           </p>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               onClick={() => onNavigateTab('members')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition shadow-sm cursor-pointer"
             >
               <UserPlus className="w-4 h-4" />
               <span>Input Anggota Baru</span>
@@ -115,11 +116,23 @@ export const BranchOverview: React.FC<BranchOverviewProps> = ({ onNavigateTab })
 
             <button
               onClick={() => onNavigateTab('sp')}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs border border-white/20 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs border border-white/20 transition cursor-pointer"
             >
               <Upload className="w-4 h-4 text-emerald-300" />
               <span>Unggah Dokumen SP</span>
             </button>
+
+            <a
+              href={`https://wa.me/${((settings.footerPhone || settings.phone || '6281234567890').replace(/[^0-9]/g, '').replace(/^0/, '62'))}?text=${encodeURIComponent(
+                `Assalamu'alaikum Admin PAC IPNU IPPNU Dukun, kami dari *${unit.name}* mengonfirmasi telah mengisi dan memperbarui data pangkalan (Skor Kelengkapan: ${unit.completenessScore}%, Anggota: ${unitMembers.length} kader, Pengurus: ${unitOfficers.length} orang). Mohon verifikasi. Terima kasih.`
+              )}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold rounded-xl text-xs transition shadow-sm"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Konfirmasi Selesai Isi Data ke WA PAC</span>
+            </a>
           </div>
         </div>
       </div>

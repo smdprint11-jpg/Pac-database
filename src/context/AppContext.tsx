@@ -118,8 +118,11 @@ interface AppContextType {
   updateWeights: (weights: CompletenessWeights) => void;
 
   // Notifications
+  addNotification: (notif: Omit<SystemNotification, 'id' | 'timestamp' | 'isRead'>) => void;
   markNotificationAsRead: (id: string) => void;
   markAllNotificationsAsRead: () => void;
+  deleteNotification: (id: string) => void;
+  clearAllNotifications: () => void;
 
   // Utils & Database
   showToast: (message: string, type?: ToastMessage['type']) => void;
@@ -647,12 +650,31 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   // Notifications
+  const addNotification = (notifData: Omit<SystemNotification, 'id' | 'timestamp' | 'isRead'>) => {
+    const newNotif: SystemNotification = {
+      ...notifData,
+      id: 'notif-' + Date.now(),
+      timestamp: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      isRead: false,
+    };
+    setNotifications((prev) => [newNotif, ...prev]);
+    logActivity('Kirim Notifikasi Sistem', newNotif.title, newNotif.message);
+    showToast('Notifikasi berhasil dikirim', 'success');
+  };
   const markNotificationAsRead = (id: string) => {
     setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
   };
   const markAllNotificationsAsRead = () => {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     showToast('Semua notifikasi ditandai telah dibaca', 'info');
+  };
+  const deleteNotification = (id: string) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    showToast('Notifikasi dihapus', 'info');
+  };
+  const clearAllNotifications = () => {
+    setNotifications([]);
+    showToast('Seluruh riwayat notifikasi dibersihkan', 'info');
   };
 
   // Reset
@@ -729,8 +751,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         deleteUser,
         changeUserPassword,
         updateWeights,
+        addNotification,
         markNotificationAsRead,
         markAllNotificationsAsRead,
+        deleteNotification,
+        clearAllNotifications,
         showToast,
         dismissToast,
         logActivity,

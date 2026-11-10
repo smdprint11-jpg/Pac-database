@@ -380,13 +380,32 @@ export const SpDocumentsView: React.FC = () => {
             <label className="block text-xs font-semibold text-slate-700 mb-1">
               File Lampiran Dokumen (Format PDF/Scan Berita Acara)
             </label>
-            <div className="border-2 border-dashed border-slate-300 hover:border-emerald-500 p-4 rounded-2xl text-center bg-slate-50/50 cursor-pointer transition">
-              <Upload className="w-6 h-6 text-slate-400 mx-auto mb-1" />
+            <label className="border-2 border-dashed border-emerald-300 hover:border-emerald-500 p-4 rounded-2xl text-center bg-emerald-50/40 cursor-pointer transition block">
+              <Upload className="w-6 h-6 text-emerald-600 mx-auto mb-1" />
               <div className="text-xs font-bold text-slate-800">{uploadForm.fileName}</div>
-              <span className="text-[11px] text-slate-500">
-                Ukuran maksimal 5MB (Format .pdf atau .png/.jpg)
+              <span className="text-[11px] text-slate-500 block">
+                Klik untuk pilih file dari perangkat (.pdf, .png, .jpg)
               </span>
-            </div>
+              <input
+                type="file"
+                accept=".pdf,image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setUploadForm((prev) => ({
+                      ...prev,
+                      fileName: file.name,
+                      fileUrl: typeof reader.result === 'string' ? reader.result : prev.fileUrl,
+                    }));
+                    showToast(`File ${file.name} berhasil dipilih`, 'info');
+                  };
+                  reader.readAsDataURL(file);
+                }}
+                className="hidden"
+              />
+            </label>
           </div>
 
           <div className="pt-4 border-t border-slate-200 flex justify-end gap-2">

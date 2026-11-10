@@ -21,10 +21,13 @@ import {
   Image as ImageIcon,
   MessageCircle,
   X,
+  FileText,
 } from 'lucide-react';
+import { exportOfficersToPdf } from '../../utils/pdfExport';
 
 export const PacOfficersView: React.FC = () => {
   const { officers, addOfficer, updateOfficer, deleteOfficer, showToast, settings, activities } = useApp();
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [orgFilter, setOrgFilter] = useState<'ALL' | OrganizationType>('ALL');
@@ -205,17 +208,41 @@ export const PacOfficersView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={isExportingPdf || filteredOfficers.length === 0}
+            onClick={async () => {
+              try {
+                setIsExportingPdf(true);
+                showToast('Menyiapkan dokumen PDF beserta pas foto pengurus PAC...', 'info');
+                const scopeLabel =
+                  orgFilter === 'ALL'
+                    ? 'Seluruh Pengurus PAC IPNU & IPPNU Dukun'
+                    : `Pengurus PAC ${orgFilter} Kecamatan Dukun`;
+                await exportOfficersToPdf(filteredOfficers, settings, scopeLabel);
+                showToast('PDF Data Real & Foto Pengurus PAC berhasil diunduh', 'success');
+              } catch {
+                showToast('Gagal mengekspor PDF', 'error');
+              } finally {
+                setIsExportingPdf(false);
+              }
+            }}
+            className="px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>{isExportingPdf ? 'Memproses PDF...' : 'Export PDF (Data & Foto)'}</span>
+          </button>
           <button
             onClick={handleExportCsv}
-            className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition"
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold flex items-center gap-1.5 shadow-xs transition cursor-pointer"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
             <span>Export CSV</span>
           </button>
           <button
             onClick={handleOpenAdd}
-            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+            className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
             <span>Tambah Pengurus</span>

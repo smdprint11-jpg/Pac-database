@@ -32,7 +32,7 @@ export const SupervisorsView: React.FC = () => {
     showToast,
   } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'supervisors' | 'alumni'>('supervisors');
+  const [activeTab, setActiveTab] = useState<'all' | 'supervisors' | 'alumni'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   // Modals
@@ -210,24 +210,44 @@ export const SupervisorsView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            Dewan Pembina & Majelis Alumni PAC Dukun
+            Folder Terpadu: Dewan Pelindung & Dewan Pembina PAC Dukun
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
-            Database para kiai, tokoh NU, sesepuh, serta purna pengurus lintas generasi di Kecamatan Dukun
+            Satu folder database kehormatan dengan kategori Dewan Pelindung (Tokoh/MWC NU) & Dewan Pembina (Majelis Alumni)
           </p>
         </div>
 
-        <button
-          onClick={activeTab === 'supervisors' ? handleOpenAddSup : handleOpenAddAlm}
-          className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer self-start sm:self-auto"
-        >
-          <UserPlus className="w-4 h-4" />
-          <span>{activeTab === 'supervisors' ? 'Tambah Pembina' : 'Tambah Alumni'}</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={handleOpenAddSup}
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>+ Dewan Pelindung</span>
+          </button>
+          <button
+            onClick={handleOpenAddAlm}
+            className="px-3.5 py-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition active:scale-95 cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>+ Dewan Pembina (Alumni)</span>
+          </button>
+        </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-slate-200">
+      {/* Category Filter Tabs inside 1 Unified Folder */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
+            activeTab === 'all'
+              ? 'border-emerald-600 text-emerald-800'
+              : 'border-transparent text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Semua Kategori ({supervisors.length + alumni.length})</span>
+        </button>
         <button
           onClick={() => setActiveTab('supervisors')}
           className={`px-4 py-2.5 text-xs font-bold border-b-2 transition flex items-center gap-2 cursor-pointer ${
@@ -237,7 +257,7 @@ export const SupervisorsView: React.FC = () => {
           }`}
         >
           <Award className="w-4 h-4" />
-          <span>Dewan Pembina ({supervisors.length})</span>
+          <span>Kategori: Dewan Pelindung ({supervisors.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('alumni')}
@@ -248,7 +268,7 @@ export const SupervisorsView: React.FC = () => {
           }`}
         >
           <GraduationCap className="w-4 h-4" />
-          <span>Majelis Alumni ({alumni.length})</span>
+          <span>Kategori: Dewan Pembina / Majelis Alumni ({alumni.length})</span>
         </button>
       </div>
 
@@ -260,19 +280,22 @@ export const SupervisorsView: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={
-              activeTab === 'supervisors'
-                ? 'Cari nama pembina, jabatan kehormatan, atau lembaga...'
-                : 'Cari nama alumni, masa khidmat terdahulu, atau aktivitas sekarang...'
-            }
+            placeholder="Cari nama tokoh Dewan Pelindung atau Dewan Pembina (Majelis Alumni)..."
             className="w-full pl-9 pr-4 py-2 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
           />
         </div>
       </div>
 
-      {/* Supervisors Content */}
-      {activeTab === 'supervisors' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Supervisors Content (Dewan Pelindung) */}
+      {(activeTab === 'all' || activeTab === 'supervisors') && (
+        <div className="space-y-3">
+          {activeTab === 'all' && (
+            <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 uppercase tracking-wider px-1">
+              <Award className="w-4 h-4" />
+              <span>Kategori 1: Dewan Pelindung ({filteredSupervisors.length})</span>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredSupervisors.map((sup) => (
             <div
               key={sup.id}
@@ -348,12 +371,20 @@ export const SupervisorsView: React.FC = () => {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
 
-      {/* Alumni Content */}
-      {activeTab === 'alumni' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Alumni Content (Dewan Pembina) */}
+      {(activeTab === 'all' || activeTab === 'alumni') && (
+        <div className="space-y-3 pt-2">
+          {activeTab === 'all' && (
+            <div className="flex items-center gap-2 text-xs font-bold text-teal-800 uppercase tracking-wider px-1">
+              <GraduationCap className="w-4 h-4" />
+              <span>Kategori 2: Dewan Pembina / Majelis Alumni ({filteredAlumni.length})</span>
+            </div>
+          )}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredAlumni.map((alm) => (
             <div
               key={alm.id}
@@ -428,6 +459,7 @@ export const SupervisorsView: React.FC = () => {
               </div>
             </div>
           ))}
+          </div>
         </div>
       )}
 
