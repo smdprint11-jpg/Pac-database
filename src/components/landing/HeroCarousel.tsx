@@ -49,7 +49,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onOpenLogin }) => {
   return (
     <section
       id="beranda"
-      className="relative pt-20 pb-10 sm:pt-28 sm:pb-20 lg:pt-32 lg:pb-24 overflow-hidden bg-slate-900 text-white"
+      className="relative pt-16 pb-6 sm:pt-28 sm:pb-20 lg:pt-32 lg:pb-24 overflow-hidden bg-slate-900 text-white"
     >
       {/* Background slide images with crossfade */}
       <div className="absolute inset-0 z-0">
@@ -76,63 +76,63 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onOpenLogin }) => {
       <div className="relative z-10 max-w-5xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto flex flex-col items-center text-center">
           {/* Organization badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[11px] sm:text-sm font-semibold backdrop-blur-md mb-4 sm:mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
-            <span>{badgeLabel}</span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-4 sm:py-1.5 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 text-[10px] sm:text-sm font-semibold backdrop-blur-md mb-2.5 sm:mb-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-300 shrink-0" />
+            <span className="truncate max-w-[260px] sm:max-w-none">{badgeLabel}</span>
           </div>
 
           {/* Big Titles - Centered & Larger */}
-          <h1 className="text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.12] text-white mb-4 sm:mb-6 text-center">
-            <span className="block text-emerald-400 font-serif tracking-normal mb-1.5 sm:mb-2 text-base sm:text-2xl md:text-3xl font-semibold">
+          <h1 className="text-xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.15] sm:leading-[1.12] text-white mb-2 sm:mb-6 text-center">
+            <span className="block text-emerald-400 font-serif tracking-normal mb-1 sm:mb-2 text-xs sm:text-2xl md:text-3xl font-semibold">
               {slide.tagline || slide.subtitle}
             </span>
             {slide.title}
           </h1>
 
-          <p className="text-xs sm:text-lg md:text-xl text-slate-300 leading-relaxed mb-5 sm:mb-8 max-w-2xl mx-auto text-center font-normal">
+          <p className="text-[11px] sm:text-lg md:text-xl text-slate-300 leading-relaxed mb-3.5 sm:mb-8 max-w-2xl mx-auto text-center font-normal line-clamp-2 sm:line-clamp-none">
             {slide.description}
           </p>
 
           {/* Call to action buttons */}
-          <div className="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-4">
             <a
               href={cta.primaryBtnLink || slide.buttonLink || '#profil'}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-900/40 hover:shadow-emerald-600/30 transition transform hover:-translate-y-0.5"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 sm:px-6 sm:py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[11px] sm:text-sm shadow-lg shadow-emerald-900/40 hover:shadow-emerald-600/30 transition transform hover:-translate-y-0.5"
             >
               <span>{cta.primaryBtnText || slide.buttonText || 'Kenali Organisasi'}</span>
-              <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <ArrowRight className="w-3 h-3 sm:w-4 sm:h-4" />
             </a>
 
             <button
               type="button"
               onClick={onOpenLogin}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs sm:text-sm border border-white/20 backdrop-blur-md transition transform hover:-translate-y-0.5 cursor-pointer"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-3 py-1.5 sm:px-6 sm:py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-[11px] sm:text-sm border border-white/20 backdrop-blur-md transition transform hover:-translate-y-0.5 cursor-pointer"
             >
-              <ShieldCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+              <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
               <span>{cta.secondaryBtnText || settings.navMenuLabels?.loginBtn || 'Login Pengurus'}</span>
             </button>
 
             <a
               href={cta.tertiaryBtnLink || '#ranting-pk'}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-5 sm:py-3.5 rounded-xl text-slate-300 hover:text-white font-medium text-xs sm:text-sm transition"
+              className="inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-1.5 sm:px-5 sm:py-3.5 rounded-xl text-slate-300 hover:text-white font-medium text-[11px] sm:text-sm transition"
             >
-              <Database className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+              <Database className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400" />
               <span>{cta.tertiaryBtnText || 'Akses Database Ranting'}</span>
             </a>
           </div>
 
           {/* Quick micro highlights */}
-          <div className="mt-7 pt-5 sm:mt-12 sm:pt-8 border-t border-white/10 flex flex-wrap items-center justify-center gap-4 sm:gap-10 text-[11px] sm:text-sm text-slate-300">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="mt-4 pt-3 sm:mt-12 sm:pt-8 border-t border-white/10 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:gap-10 text-[10px] sm:text-sm text-slate-300">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>{cta.highlight1 || '18 Ranting Desa Terdata'}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-teal-400" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-teal-400" />
               <span>{cta.highlight2 || '6 Komisariat Lembaga'}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-amber-400" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400" />
               <span>{cta.highlight3 || 'Pengesahan Dokumen SP Terintegrasi'}</span>
             </div>
           </div>

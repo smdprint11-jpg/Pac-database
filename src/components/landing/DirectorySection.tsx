@@ -69,43 +69,43 @@ export const DirectorySection: React.FC = () => {
   );
 
   return (
-    <section id="ranting-pk" className="py-10 sm:py-16 bg-slate-50 border-b border-slate-200/60">
+    <section id="ranting-pk" className="py-4 sm:py-16 bg-slate-50 border-b border-slate-200/60">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-8">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase tracking-wider mb-2">
-            <Building2 className="w-3.5 h-3.5" />
+        <div className="text-center max-w-3xl mx-auto mb-3.5 sm:mb-8">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-1">
+            <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
             <span>Direktori Basis & Pangkalan</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+          <h2 className="text-lg sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
             {settings.sectionTitles?.rantingPkTitle || 'Pimpinan Ranting Desa & Pimpinan Komisariat'}
           </h2>
-          <p className="mt-2 text-xs sm:text-sm text-slate-600 leading-relaxed">
+          <p className="mt-1 text-[11px] sm:text-sm text-slate-600 leading-relaxed line-clamp-2 sm:line-clamp-none">
             {settings.sectionTitles?.rantingPkSubtitle ||
               'Pemantauan langsung kelengkapan database administrasi, status surat pengesahan (SP), dan profil pimpinan di 18 Ranting dan 6 Komisariat se-Kecamatan Dukun.'}
           </p>
         </div>
 
         {/* Search & Filter Toolbar */}
-        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="bg-white p-2.5 sm:p-5 rounded-2xl border border-slate-200/80 shadow-xs mb-3.5 sm:mb-8 flex flex-col md:flex-row gap-2 sm:gap-4 items-center justify-between">
           {/* Search box */}
           <div className="relative w-full md:w-96">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+            <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400 absolute left-3 top-2.5 sm:top-3.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari nama ranting, sekolah, atau ketua..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-300 text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+              className="w-full pl-9 pr-3 py-1.5 sm:py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
             />
           </div>
 
           {/* Type & Status Filters */}
-          <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-            <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto">
+            <div className="flex items-center p-0.5 sm:p-1 bg-slate-100 rounded-xl border border-slate-200">
               <button
                 onClick={() => setSelectedType('ALL')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold transition ${
                   selectedType === 'ALL'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -115,74 +115,74 @@ export const DirectorySection: React.FC = () => {
               </button>
               <button
                 onClick={() => setSelectedType('RANTING')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold transition ${
                   selectedType === 'RANTING'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Ranting Desa ({units.filter((u) => u.type === 'RANTING').length})
+                Ranting ({units.filter((u) => u.type === 'RANTING').length})
               </button>
               <button
                 onClick={() => setSelectedType('KOMISARIAT')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-[10px] sm:text-xs font-semibold transition ${
                   selectedType === 'KOMISARIAT'
                     ? 'bg-teal-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                Komisariat ({units.filter((u) => u.type === 'KOMISARIAT').length})
+                PK ({units.filter((u) => u.type === 'KOMISARIAT').length})
               </button>
             </div>
 
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="px-3 py-2 rounded-xl border border-slate-300 text-xs font-medium bg-white text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+              className="px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-slate-300 text-[10px] sm:text-xs font-medium bg-white text-slate-700 focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
             >
-              <option value="ALL">Semua Status Keaktifan</option>
-              <option value="AKTIF">Hanya Status Aktif</option>
+              <option value="ALL">Semua Status</option>
+              <option value="AKTIF">Status Aktif</option>
               <option value="PERLU_PERHATIAN">Perlu Perhatian</option>
             </select>
           </div>
         </div>
 
         {/* Slideshow Bar & Info */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-2 border-b border-slate-200/80">
-          <div>
-            <span className="text-xs font-bold text-slate-800">
-              Menampilkan 4 Pangkalan per Slide
+        <div className="flex flex-row items-center justify-between gap-2 mb-3 sm:mb-6 pb-1.5 sm:pb-2 border-b border-slate-200/80">
+          <div className="min-w-0">
+            <span className="text-[11px] sm:text-xs font-bold text-slate-800">
+              4 Pangkalan / Slide
             </span>
-            <span className="text-xs text-slate-500 ml-2">
-              (Halaman {currentSlideIndex + 1} dari {totalPages} • Total {filteredUnits.length} Ranting & PK)
+            <span className="text-[10px] sm:text-xs text-slate-500 ml-1.5">
+              ({currentSlideIndex + 1}/{totalPages} • {filteredUnits.length} Unit)
             </span>
           </div>
 
           {totalPages > 1 && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => setIsPaused(!isPaused)}
-                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
                 title={isPaused ? 'Putar Slideshow Otomatis' : 'Jeda Slideshow'}
               >
-                {isPaused ? <Play className="w-4 h-4 text-emerald-600" /> : <Pause className="w-4 h-4 text-slate-600" />}
+                {isPaused ? <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" /> : <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />}
               </button>
               <button
                 type="button"
                 onClick={() => setCurrentSlideIndex((prev) => (prev - 1 + totalPages) % totalPages)}
-                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
                 title="Slide Sebelumnya"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
               <button
                 type="button"
                 onClick={() => setCurrentSlideIndex((prev) => (prev + 1) % totalPages)}
-                className="p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+                className="p-1.5 sm:p-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
                 title="Slide Berikutnya"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </button>
             </div>
           )}
@@ -192,7 +192,7 @@ export const DirectorySection: React.FC = () => {
         <div
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-5"
         >
           {displayedUnits.map((unit) => {
             const gradeStyle = getGradeBadgeColor(unit.completenessGrade);
@@ -203,76 +203,76 @@ export const DirectorySection: React.FC = () => {
               <div
                 key={unit.id}
                 onClick={() => setSelectedUnit(unit)}
-                className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 hover:border-emerald-300 p-3 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
+                className="bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 hover:border-emerald-300 p-2.5 sm:p-5 shadow-xs hover:shadow-xl transition-all duration-300 flex flex-col justify-between group cursor-pointer"
               >
                 <div>
                   {/* Top Bar with Badges */}
-                  <div className="flex items-start justify-between gap-2 mb-3">
-                    <div className="flex items-center gap-1.5">
+                  <div className="flex items-start justify-between gap-1 mb-1.5 sm:mb-3">
+                    <div className="flex items-center gap-1">
                       <div
-                        className={`p-1.5 rounded-lg ${
+                        className={`p-1 sm:p-1.5 rounded-lg ${
                           isRanting ? 'bg-emerald-100 text-emerald-800' : 'bg-teal-100 text-teal-800'
                         }`}
                       >
                         {isRanting ? (
-                          <Building2 className="w-3.5 h-3.5" />
+                          <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         ) : (
-                          <School className="w-3.5 h-3.5" />
+                          <School className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         )}
                       </div>
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {unit.type}
+                      <span className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        {isRanting ? 'PR' : 'PK'}
                       </span>
                     </div>
 
                     <div
-                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-semibold ${statusStyle.bg} ${statusStyle.text}`}
                     >
                       <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dotColor}`} />
-                      <span>{statusStyle.label}</span>
+                      <span className="truncate max-w-[60px] sm:max-w-none">{statusStyle.label}</span>
                     </div>
                   </div>
 
                   {/* Title & Village */}
-                  <h3 className="text-base font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug mb-1 line-clamp-1">
+                  <h3 className="text-xs sm:text-base font-bold text-slate-900 group-hover:text-emerald-700 transition leading-snug mb-0.5 sm:mb-1 line-clamp-1">
                     {unit.name}
                   </h3>
-                  <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mb-3">
-                    <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                  <div className="text-[10px] sm:text-[11px] text-slate-500 flex items-center gap-1 mb-1.5 sm:mb-3">
+                    <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400 shrink-0" />
                     <span className="truncate">{unit.villageOrSchool}</span>
                   </div>
 
                   {/* Leaders */}
-                  <div className="space-y-1 text-xs text-slate-700 bg-slate-50 p-2.5 rounded-xl mb-3 border border-slate-100">
-                    <div className="flex justify-between items-center text-[11px]">
+                  <div className="space-y-0.5 sm:space-y-1 text-xs text-slate-700 bg-slate-50 p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl mb-2 sm:mb-3 border border-slate-100">
+                    <div className="flex justify-between items-center text-[10px] sm:text-[11px]">
                       <span className="text-slate-500 font-medium">IPNU:</span>
-                      <span className="font-semibold text-slate-900 truncate max-w-[130px]">
+                      <span className="font-semibold text-slate-900 truncate max-w-[90px] sm:max-w-[130px]">
                         {unit.leaderIpnu || '-'}
                       </span>
                     </div>
-                    <div className="flex justify-between items-center text-[11px]">
+                    <div className="flex justify-between items-center text-[10px] sm:text-[11px]">
                       <span className="text-slate-500 font-medium">IPPNU:</span>
-                      <span className="font-semibold text-slate-900 truncate max-w-[130px]">
+                      <span className="font-semibold text-slate-900 truncate max-w-[90px] sm:max-w-[130px]">
                         {unit.leaderIppnu || '-'}
                       </span>
                     </div>
                   </div>
 
                   {/* Completeness Score Bar */}
-                  <div className="mb-3">
-                    <div className="flex items-center justify-between text-[11px] mb-1">
+                  <div className="mb-1.5 sm:mb-3">
+                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] mb-0.5 sm:mb-1">
                       <span className="font-semibold text-slate-700">Database:</span>
                       <span className="font-extrabold text-emerald-800">
                         {unit.completenessScore}%
                       </span>
                     </div>
-                    <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="w-full h-1 sm:h-1.5 bg-slate-100 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${gradeStyle.barColor}`}
                         style={{ width: `${unit.completenessScore}%` }}
                       />
                     </div>
-                    <div className="flex justify-between items-center mt-1">
+                    <div className="hidden sm:flex justify-between items-center mt-1">
                       <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md border ${gradeStyle.bg} ${gradeStyle.text} ${gradeStyle.border}`}>
                         Grade {unit.completenessGrade}
                       </span>
@@ -284,10 +284,10 @@ export const DirectorySection: React.FC = () => {
                 </div>
 
                 {/* Footer Count stats */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-600">
-                  <div className="flex items-center gap-2">
-                    <span title="Jumlah Anggota" className="flex items-center gap-1">
-                      <Users className="w-3 h-3 text-slate-400" />
+                <div className="pt-1.5 sm:pt-3 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-600">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <span title="Jumlah Anggota" className="flex items-center gap-0.5 sm:gap-1">
+                      <Users className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-400" />
                       <strong className="text-slate-900">{unit.membersCount}</strong>
                     </span>
                     <span>•</span>
@@ -298,9 +298,9 @@ export const DirectorySection: React.FC = () => {
                     </span>
                   </div>
 
-                  <div className="text-emerald-700 font-semibold group-hover:translate-x-1 transition flex items-center gap-0.5 text-xs">
+                  <div className="text-emerald-700 font-semibold group-hover:translate-x-1 transition flex items-center gap-0.5 text-[10px] sm:text-xs">
                     <span>Detail</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
+                    <ChevronRight className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                   </div>
                 </div>
               </div>
@@ -310,13 +310,13 @@ export const DirectorySection: React.FC = () => {
 
         {/* Dots Navigation */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-1.5 pt-6">
+          <div className="flex items-center justify-center gap-1.5 pt-3 sm:pt-6">
             {Array.from({ length: totalPages }).map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCurrentSlideIndex(idx)}
-                className={`h-2 rounded-full transition-all cursor-pointer ${
-                  idx === currentSlideIndex ? 'w-6 bg-emerald-600' : 'w-2 bg-slate-300 hover:bg-slate-400'
+                className={`h-1.5 sm:h-2 rounded-full transition-all cursor-pointer ${
+                  idx === currentSlideIndex ? 'w-5 sm:w-6 bg-emerald-600' : 'w-1.5 sm:w-2 bg-slate-300 hover:bg-slate-400'
                 }`}
                 aria-label={`Pindah ke slide ${idx + 1}`}
               />

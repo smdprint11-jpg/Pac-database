@@ -136,19 +136,19 @@ export const LeadershipSection: React.FC = () => {
   }, [filterOrg]);
 
   return (
-    <section id="pengurus" className="py-7 sm:py-14 bg-white border-b border-slate-200/60">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-6 sm:space-y-10">
+    <section id="pengurus" className="py-4 sm:py-14 bg-white border-b border-slate-200/60">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 space-y-4 sm:space-y-10">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-3">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-2 sm:gap-3">
           <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-1.5">
-              <Users className="w-3.5 h-3.5" />
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-1">
+              <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
               <span>Struktur Kepemimpinan</span>
             </div>
-            <h2 className="text-xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-lg sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
               {settings.sectionTitles?.pengurusTitle || 'Pimpinan Harian PAC IPNU IPPNU DUKUN'}
             </h2>
-            <p className="mt-1 text-slate-600 text-xs sm:text-sm">
+            <p className="mt-0.5 sm:mt-1 text-slate-600 text-[11px] sm:text-sm line-clamp-2 sm:line-clamp-none">
               {formattedPeriod}.{' '}
               {settings.sectionTitles?.pengurusSubtitle ||
                 'Berikhtiar mengayomi dan menggerakkan pelajar Nahdliyin dengan kepemimpinan yang amanah, cerdas, dan transformatif.'}
@@ -156,10 +156,10 @@ export const LeadershipSection: React.FC = () => {
           </div>
 
           {/* Org Filter Buttons */}
-          <div className="flex items-center gap-1 p-1 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
+          <div className="flex items-center gap-1 p-0.5 sm:p-1 bg-slate-100 rounded-xl border border-slate-200 self-start md:self-auto">
             <button
               onClick={() => setFilterOrg('ALL')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition cursor-pointer ${
                 filterOrg === 'ALL'
                   ? 'bg-white text-slate-900 shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -169,7 +169,7 @@ export const LeadershipSection: React.FC = () => {
             </button>
             <button
               onClick={() => setFilterOrg('IPNU')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition cursor-pointer ${
                 filterOrg === 'IPNU'
                   ? 'bg-emerald-600 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -179,7 +179,7 @@ export const LeadershipSection: React.FC = () => {
             </button>
             <button
               onClick={() => setFilterOrg('IPPNU')}
-              className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+              className={`px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-semibold transition cursor-pointer ${
                 filterOrg === 'IPPNU'
                   ? 'bg-green-700 text-white shadow-xs'
                   : 'text-slate-600 hover:text-slate-900'
@@ -195,43 +195,43 @@ export const LeadershipSection: React.FC = () => {
           <div
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
-            className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-green-950 rounded-2xl sm:rounded-3xl p-4 sm:p-7 text-white shadow-xl relative overflow-hidden"
+            className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-green-950 rounded-2xl sm:rounded-3xl p-3 sm:p-7 text-white shadow-xl relative overflow-hidden"
           >
             {/* Background Decorative Rings */}
             <div className="absolute top-0 right-0 w-72 h-72 bg-white/5 rounded-full blur-2xl pointer-events-none" />
             <div className="absolute -bottom-10 -left-10 w-56 h-56 bg-emerald-500/10 rounded-full blur-xl pointer-events-none" />
 
-            <div className="relative z-10 space-y-4 sm:space-y-5">
+            <div className="relative z-10 space-y-2.5 sm:space-y-5">
               {/* Top Slider Header & Controls */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-3.5">
-                <div>
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-800/80 border border-emerald-400/30 text-[10px] font-bold text-amber-300">
-                    <Sparkles className="w-3 h-3" />
-                    <span>4 Foto Pimpinan Harian • Geser Halus Satu per Satu</span>
+              <div className="flex flex-row items-center justify-between gap-2 border-b border-white/10 pb-2 sm:pb-3.5">
+                <div className="min-w-0">
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-800/80 border border-emerald-400/30 text-[9px] sm:text-[10px] font-bold text-amber-300">
+                    <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                    <span className="truncate">4 Foto Pimpinan Harian • Geser Halus</span>
                   </div>
-                  <h3 className="text-base sm:text-xl font-black text-white tracking-tight mt-1">
+                  <h3 className="text-xs sm:text-xl font-black text-white tracking-tight mt-0.5 sm:mt-1 truncate">
                     Galeri Foto Pengurus Harian PAC Dukun
                   </h3>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                   <button
                     type="button"
                     onClick={() => setIsPaused(!isPaused)}
-                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
+                    className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
                     title={isPaused ? 'Putar Slide Otomatis' : 'Jeda Slide'}
                   >
-                    {isPaused ? <Play className="w-4 h-4 text-amber-300" /> : <Pause className="w-4 h-4" />}
+                    {isPaused ? <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-300" /> : <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
                   </button>
                   <button
                     type="button"
                     onClick={handlePrevSlide}
-                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
+                    className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
                     aria-label="Geser Kiri"
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
-                  <div className="flex items-center gap-1 px-1">
+                  <div className="hidden sm:flex items-center gap-1 px-1">
                     {Array.from({ length: maxSlideOffset + 1 }).map((_, idx) => (
                       <button
                         key={idx}
@@ -246,10 +246,10 @@ export const LeadershipSection: React.FC = () => {
                   <button
                     type="button"
                     onClick={handleNextSlide}
-                    className="p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
+                    className="p-1.5 sm:p-2 rounded-xl bg-white/10 hover:bg-white/20 border border-white/20 text-white transition cursor-pointer"
                     aria-label="Geser Kanan"
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 </div>
               </div>
@@ -265,18 +265,18 @@ export const LeadershipSection: React.FC = () => {
                   {pacSlides.map((slideItem, sIdx) => (
                     <div
                       key={`${slideItem.id}-${sIdx}`}
-                      className="w-1/2 sm:w-1/4 shrink-0 px-1.5 sm:px-2"
+                      className="w-1/2 sm:w-1/4 shrink-0 px-1 sm:px-2"
                     >
-                      <div className="h-full bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/20 p-2.5 sm:p-4 flex flex-col justify-between hover:bg-white/15 transition duration-300 shadow-lg">
-                        <div className="space-y-2 sm:space-y-3">
-                          <div className="aspect-[3/4] rounded-lg sm:rounded-xl overflow-hidden border border-emerald-400/40 shadow-md bg-slate-800 relative">
+                      <div className="h-full bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/20 p-2 sm:p-4 flex flex-col justify-between hover:bg-white/15 transition duration-300 shadow-lg">
+                        <div className="space-y-1.5 sm:space-y-3">
+                          <div className="aspect-[4/4] sm:aspect-[3/4] rounded-lg sm:rounded-xl overflow-hidden border border-emerald-400/40 shadow-md bg-slate-800 relative">
                             <img
                               src={slideItem.photo}
                               alt={slideItem.name}
                               className="w-full h-full object-cover transition duration-500 hover:scale-105"
                             />
                             <span
-                              className={`absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-extrabold uppercase tracking-wider shadow ${
+                              className={`absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-extrabold uppercase tracking-wider shadow ${
                                 slideItem.organization === 'IPNU'
                                   ? 'bg-emerald-600 text-white'
                                   : 'bg-amber-400 text-slate-950'
@@ -286,10 +286,10 @@ export const LeadershipSection: React.FC = () => {
                             </span>
                           </div>
                           <div>
-                            <h4 className="text-xs sm:text-sm font-black text-white tracking-tight line-clamp-1">
+                            <h4 className="text-[11px] sm:text-sm font-black text-white tracking-tight line-clamp-1">
                               {slideItem.name}
                             </h4>
-                            <p className="text-[10px] sm:text-xs font-semibold text-emerald-300 mt-0.5 line-clamp-1">
+                            <p className="text-[9px] sm:text-xs font-semibold text-emerald-300 mt-0.5 line-clamp-1">
                               {slideItem.position}
                             </p>
                           </div>
@@ -313,30 +313,30 @@ export const LeadershipSection: React.FC = () => {
         <div
           onMouseEnter={() => setIsOfficersPaused(true)}
           onMouseLeave={() => setIsOfficersPaused(false)}
-          className="space-y-4"
+          className="space-y-2.5 sm:space-y-4"
         >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-slate-100">
+          <div className="flex flex-row items-center justify-between gap-2 pb-1.5 sm:pb-2 border-b border-slate-100">
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              <h3 className="text-xs sm:text-lg font-bold text-slate-900 tracking-tight">
                 Daftar Pengurus Harian PAC ({filteredOfficers.length} Kader)
               </h3>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[10px] sm:text-[11px] text-slate-500">
                 Geser ke samping untuk melihat detail pengurus harian
               </p>
             </div>
 
-            {filteredOfficers.length > 4 && (
-              <div className="flex items-center gap-1.5">
+            {filteredOfficers.length > 2 && (
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsOfficersPaused(!isOfficersPaused)}
-                  className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
+                  className="p-1 sm:p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
                   title={isOfficersPaused ? 'Putar Otomatis' : 'Jeda'}
                 >
                   {isOfficersPaused ? (
-                    <Play className="w-3.5 h-3.5 text-emerald-600" />
+                    <Play className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600" />
                   ) : (
-                    <Pause className="w-3.5 h-3.5 text-slate-600" />
+                    <Pause className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-600" />
                   )}
                 </button>
                 <button
@@ -344,18 +344,18 @@ export const LeadershipSection: React.FC = () => {
                   onClick={() =>
                     setOfficerOffset((prev) => (prev <= 0 ? maxOfficerOffset : prev - 1))
                   }
-                  className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
+                  className="p-1 sm:p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
                 <button
                   type="button"
                   onClick={() =>
                     setOfficerOffset((prev) => (prev >= maxOfficerOffset ? 0 : prev + 1))
                   }
-                  className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
+                  className="p-1 sm:p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-700 transition cursor-pointer"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
               </div>
             )}
@@ -377,42 +377,42 @@ export const LeadershipSection: React.FC = () => {
                 return (
                   <div
                     key={officer.id}
-                    className="w-full sm:w-1/2 lg:w-1/4 shrink-0 px-1.5 sm:px-2"
+                    className="w-1/2 sm:w-1/2 lg:w-1/4 shrink-0 px-1 sm:px-2"
                   >
                     <div
                       onClick={() => setSelectedOfficer(officer)}
-                      className="h-full bg-white rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer border-t-4 border-t-emerald-600"
+                      className="h-full bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 p-2.5 sm:p-4 shadow-2xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group cursor-pointer border-t-4 border-t-emerald-600"
                     >
-                      <div className="space-y-2.5">
-                        <div className="flex items-center gap-3">
+                      <div className="space-y-1.5 sm:space-y-2.5">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <div className="relative shrink-0">
                             {officer.avatar ? (
                               <img
                                 src={officer.avatar}
                                 alt={officer.fullName}
-                                className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl object-cover border border-emerald-500/20 group-hover:scale-105 transition"
+                                className="w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover border border-emerald-500/20 group-hover:scale-105 transition"
                               />
                             ) : (
-                              <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-emerald-50 border border-emerald-500/20 flex items-center justify-center text-emerald-700 font-bold text-base">
+                              <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-emerald-50 border border-emerald-500/20 flex items-center justify-center text-emerald-700 font-bold text-xs sm:text-base">
                                 {officer.fullName.charAt(0)}
                               </div>
                             )}
                             <span
-                              className={`absolute -bottom-1 -right-1 px-1.5 py-0.2 rounded text-[8px] font-black uppercase border ${badgeColor}`}
+                              className={`absolute -bottom-1 -right-1 px-1 py-0.2 rounded text-[7px] sm:text-[8px] font-black uppercase border ${badgeColor}`}
                             >
                               {officer.organization}
                             </span>
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <div className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider truncate">
+                            <div className="text-[9px] sm:text-[10px] font-bold text-emerald-700 uppercase tracking-wider truncate">
                               {officer.position}
                             </div>
-                            <h3 className="text-xs sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition truncate">
+                            <h3 className="text-[11px] sm:text-sm font-bold text-slate-900 group-hover:text-emerald-700 transition truncate">
                               {officer.fullName}
                             </h3>
                             {officer.nia && (
-                              <div className="text-[9px] font-mono text-slate-400 truncate">
+                              <div className="hidden sm:block text-[9px] font-mono text-slate-400 truncate">
                                 NIA: {officer.nia}
                               </div>
                             )}
@@ -420,19 +420,19 @@ export const LeadershipSection: React.FC = () => {
                         </div>
 
                         {officer.description && (
-                          <p className="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
+                          <p className="hidden sm:block text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
                             {officer.description}
                           </p>
                         )}
                       </div>
 
-                      <div className="pt-2.5 mt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
-                        <span className="text-[10px] font-medium text-slate-400">
+                      <div className="pt-1.5 mt-1.5 sm:pt-2.5 sm:mt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500">
+                        <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 truncate">
                           Pengurus Harian
                         </span>
-                        <span className="inline-flex items-center gap-0.5 font-semibold text-emerald-700 group-hover:translate-x-0.5 transition">
+                        <span className="inline-flex items-center gap-0.5 font-semibold text-emerald-700 group-hover:translate-x-0.5 transition shrink-0">
                           <span>Detail</span>
-                          <ChevronRight className="w-3 h-3" />
+                          <ChevronRight className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                         </span>
                       </div>
                     </div>

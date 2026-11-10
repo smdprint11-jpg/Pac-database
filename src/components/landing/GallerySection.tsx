@@ -85,46 +85,46 @@ export const GallerySection: React.FC = () => {
   }
 
   return (
-    <section id="galeri" className="py-10 sm:py-16 bg-slate-50 border-b border-slate-200/60 overflow-hidden">
+    <section id="galeri" className="py-4 sm:py-16 bg-slate-50 border-b border-slate-200/60 overflow-hidden">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6 sm:mb-8">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[11px] font-bold uppercase tracking-wider mb-2">
-              <Camera className="w-3.5 h-3.5" />
-              <span>Dokumentasi Visual • 4 Slide Terkumpul</span>
+        <div className="flex flex-row items-end justify-between gap-2 mb-3.5 sm:mb-8">
+          <div className="max-w-2xl min-w-0">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider mb-1">
+              <Camera className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span>Dokumentasi Visual • 4 Slide</span>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className="text-lg sm:text-4xl font-extrabold text-slate-900 tracking-tight leading-snug">
               {settings.sectionTitles?.galeriTitle || 'Galeri Kegiatan Pelajar NU Dukun'}
             </h2>
-            <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+            <p className="mt-0.5 sm:mt-1.5 text-[11px] sm:text-sm text-slate-600 leading-relaxed line-clamp-2 sm:line-clamp-none">
               {settings.sectionTitles?.galeriSubtitle ||
                 'Sorotan potret kebersamaan, semangat belajar, perjuangan, dan khidmat para kader santri di berbagai penjuru ranting dan madrasah se-Kecamatan Dukun.'}
             </p>
           </div>
 
           {/* Slideshow Controls */}
-          <div className="flex items-center gap-2 self-start md:self-auto">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <button
               onClick={() => setIsPaused(!isPaused)}
-              className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+              className="p-1.5 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
               title={isPaused ? 'Lanjutkan Putar Otomatis' : 'Jeda Slideshow'}
             >
-              {isPaused ? <Play className="w-4 h-4 text-emerald-600" /> : <Pause className="w-4 h-4 text-slate-600" />}
+              {isPaused ? <Play className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" /> : <Pause className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />}
             </button>
             <button
               onClick={handlePrev}
-              className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+              className="p-1.5 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
               title="Foto Sebelumnya"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <button
               onClick={handleNext}
-              className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
+              className="p-1.5 sm:p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 shadow-xs transition cursor-pointer"
               title="Foto Berikutnya"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
         </div>
@@ -133,10 +133,10 @@ export const GallerySection: React.FC = () => {
         <div
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
-          className="relative rounded-2xl p-2.5 sm:p-3.5 bg-white border border-slate-200/80 shadow-xs"
+          className="relative rounded-2xl p-2 sm:p-3.5 bg-white border border-slate-200/80 shadow-xs"
         >
           {allPhotos.length > 0 ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
               {visiblePhotos.slice(0, 4).map((item, idx) => (
                 <div
                   key={`${item.originalIndex}-${idx}`}
@@ -165,20 +165,20 @@ export const GallerySection: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 text-slate-400 text-xs">
+            <div className="text-center py-8 text-slate-400 text-xs">
               Belum ada foto kegiatan di galeri.
             </div>
           )}
 
           {/* Dots Indicator */}
           {allPhotos.length > 1 && (
-            <div className="flex items-center justify-center gap-1.5 pt-4 pb-2">
+            <div className="flex items-center justify-center gap-1.5 pt-2.5 pb-1 sm:pt-4 sm:pb-2">
               {allPhotos.map((_, idx) => (
                 <button
                   key={idx}
                   onClick={() => setCurrentIndex(idx)}
                   className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                    idx === currentIndex ? 'w-6 bg-emerald-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                    idx === currentIndex ? 'w-5 sm:w-6 bg-emerald-600' : 'w-1.5 bg-slate-300 hover:bg-slate-400'
                   }`}
                   aria-label={`Pindah ke foto ${idx + 1}`}
                 />
