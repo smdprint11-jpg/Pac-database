@@ -25,51 +25,34 @@ export const LeadershipSection: React.FC = () => {
       : `Masa Khidmat ${settings.period}`
     : 'Masa Khidmat 2024 - 2026';
 
-  // Filter PAC-level officers from live database
+  // Filter PAC-level officers from live main PAC database
   const pacOfficers = officers
     .filter((o) => !o.unitId)
     .sort((a, b) => (a.displayOrder ?? a.orderIndex ?? 99) - (b.displayOrder ?? b.orderIndex ?? 99));
 
-  // Build unified 4-photo slider from live PAC officers database + CMS slider settings
-  const officerDerivedSlides: PacOfficerSlide[] = pacOfficers.map((o) => {
-    const matchingCmsSlide = (settings.pacOfficersSlider || []).find(
-      (s) =>
-        s.id === `slide-${o.id}` ||
-        s.name.toLowerCase() === o.fullName.toLowerCase() ||
-        (s.organization === o.organization && s.position.toLowerCase() === o.position.toLowerCase())
-    );
-    return {
-      id: `off-slide-${o.id}`,
-      name: o.fullName,
-      position: o.position,
-      organization: o.organization === 'IPPNU' ? 'IPPNU' : 'IPNU',
-      photo:
-        o.photoUrl ||
-        o.avatar ||
-        matchingCmsSlide?.photo ||
-        (o.organization === 'IPPNU'
-          ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'
-          : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'),
-      quote:
-        o.bio ||
-        o.description ||
-        matchingCmsSlide?.quote ||
-        `Pengurus Harian PAC ${o.organization} Kecamatan Dukun (${formattedPeriod})`,
-    };
+  const filteredOfficers = pacOfficers.filter((o) => {
+    if (filterOrg === 'ALL') return true;
+    return o.organization === filterOrg;
   });
 
-  // Also include any extra custom slides added in CMS that aren't in pacOfficers yet
-  const extraCmsSlides = (settings.pacOfficersSlider || []).filter(
-    (s) =>
-      !officerDerivedSlides.some(
-        (od) => od.name.toLowerCase() === s.name.toLowerCase()
-      )
-  );
-
-  const pacSlides: PacOfficerSlide[] =
-    officerDerivedSlides.length > 0
-      ? [...officerDerivedSlides, ...extraCmsSlides]
-      : settings.pacOfficersSlider || [];
+  // Build unified photo slider directly from all filtered PAC officers (100% synchronized with main PAC data)
+  const pacSlides: (PacOfficerSlide & { rawOfficer: Officer })[] = filteredOfficers.map((o) => ({
+    id: `off-slide-${o.id}`,
+    name: o.fullName,
+    position: o.position,
+    organization: o.organization === 'IPPNU' ? 'IPPNU' : 'IPNU',
+    photo:
+      o.photoUrl ||
+      o.avatar ||
+      (o.organization === 'IPPNU'
+        ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'
+        : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'),
+    quote:
+      o.bio ||
+      o.description ||
+      `Pengurus Harian PAC ${o.organization} Kecamatan Dukun (${formattedPeriod})`,
+    rawOfficer: o,
+  }));
 
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -99,12 +82,7 @@ export const LeadershipSection: React.FC = () => {
     setActiveSlideIndex((prev) => (prev <= 0 ? maxSlideOffset : prev - 1));
   };
 
-  const filteredOfficers = pacOfficers.filter((o) => {
-    if (filterOrg === 'ALL') return true;
-    return o.organization === filterOrg;
-  });
-
-  // Data officers below: 4 cards per row, sliding one by one smoothly
+  // Data officers below: 4 cards per row, sliding one by one smoothly across all PAC officers
   const [officerOffset, setOfficerOffset] = useState(0);
   const [isOfficersPaused, setIsOfficersPaused] = useState(false);
   const maxOfficerOffset = Math.max(0, filteredOfficers.length - 4);
@@ -118,6 +96,7 @@ export const LeadershipSection: React.FC = () => {
   }, [isOfficersPaused, maxOfficerOffset]);
 
   useEffect(() => {
+    setActiveSlideIndex(0);
     setOfficerOffset(0);
   }, [filterOrg]);
 
@@ -176,7 +155,7 @@ export const LeadershipSection: React.FC = () => {
           </div>
         </div>
 
-        {/* SLIDER BAR FOTO PENGURUS HARIAN PAC: 4 FOTO SLIDE HALUS KE SAMPING SATU-SATU */}
+        {/* SLIDER BAR FOTO PENGURUS HARIAN PAC: SEMUA PENGURUS HARIAN PAC SLIDE HALUS KE SAMPING SATU-SATU */}
         {pacSlides.length > 0 && (
           <div
             onMouseEnter={() => setIsPaused(true)}
@@ -193,10 +172,12 @@ export const LeadershipSection: React.FC = () => {
                 <div className="min-w-0">
                   <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-800/80 border border-emerald-400/30 text-[9px] sm:text-[10px] font-bold text-amber-300">
                     <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                    <span className="truncate">4 Foto Pimpinan Harian • Geser Halus</span>
+                    <span className="truncate">
+                      {pacSlides.length} Foto Pimpinan Harian • Geser Halus
+                    </span>
                   </div>
                   <h3 className="text-xs sm:text-xl font-black text-white tracking-tight mt-0.5 sm:mt-1 truncate">
-                    Galeri Foto Pengurus Harian PAC Dukun
+                    Galeri Foto Pengurus Harian PAC Dukun ({pacSlides.length} Kader)
                   </h3>
                 </div>
 
@@ -240,7 +221,7 @@ export const LeadershipSection: React.FC = () => {
                 </div>
               </div>
 
-              {/* 4 Photos Smooth Horizontal Track (Geser halus ke samping satu-satu) */}
+              {/* All PAC Officers Smooth Horizontal Track (4 visible on desktop, sliding 1-by-1) */}
               <div className="overflow-hidden">
                 <div
                   className="flex transition-transform duration-700 ease-in-out"
@@ -251,7 +232,8 @@ export const LeadershipSection: React.FC = () => {
                   {pacSlides.map((slideItem, sIdx) => (
                     <div
                       key={`${slideItem.id}-${sIdx}`}
-                      className="w-1/2 sm:w-1/4 shrink-0 px-1 sm:px-2"
+                      onClick={() => setSelectedOfficer(slideItem.rawOfficer)}
+                      className="w-1/2 sm:w-1/4 shrink-0 px-1 sm:px-2 cursor-pointer"
                     >
                       <div className="h-full bg-white/10 backdrop-blur-md rounded-xl sm:rounded-2xl border border-white/20 p-2 sm:p-4 flex flex-col justify-between hover:bg-white/15 transition duration-300 shadow-lg">
                         <div className="space-y-1.5 sm:space-y-3">
@@ -295,7 +277,7 @@ export const LeadershipSection: React.FC = () => {
           </div>
         )}
 
-        {/* DATA PENGURUS HARIAN (Satu Baris Slide Halus ke Samping Satu-Satu) */}
+        {/* DATA PENGURUS HARIAN (Satu Baris Slide Halus ke Samping Satu-Satu - Semua Data Pengurus Harian PAC) */}
         <div
           onMouseEnter={() => setIsOfficersPaused(true)}
           onMouseLeave={() => setIsOfficersPaused(false)}
@@ -307,11 +289,11 @@ export const LeadershipSection: React.FC = () => {
                 Daftar Pengurus Harian PAC ({filteredOfficers.length} Kader)
               </h3>
               <p className="text-[10px] sm:text-[11px] text-slate-500">
-                Geser ke samping untuk melihat detail pengurus harian
+                Geser ke samping untuk melihat seluruh data pengurus harian PAC ({filteredOfficers.length} pengurus)
               </p>
             </div>
 
-            {filteredOfficers.length > 2 && (
+            {filteredOfficers.length > 1 && (
               <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <button
                   type="button"
@@ -334,6 +316,18 @@ export const LeadershipSection: React.FC = () => {
                 >
                   <ChevronLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 </button>
+                <div className="hidden sm:flex items-center gap-1 px-1">
+                  {Array.from({ length: maxOfficerOffset + 1 }).map((_, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => setOfficerOffset(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        idx === officerOffset ? 'w-4 bg-emerald-600' : 'w-1.5 bg-slate-300'
+                      }`}
+                      aria-label={`Slide daftar pengurus ${idx + 1}`}
+                    />
+                  ))}
+                </div>
                 <button
                   type="button"
                   onClick={() =>
@@ -359,6 +353,8 @@ export const LeadershipSection: React.FC = () => {
                 const badgeColor = isIpnu
                   ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                   : 'bg-green-100 text-green-800 border-green-200';
+                const officerPhoto = officer.photoUrl || officer.avatar;
+                const officerBio = officer.bio || officer.description;
 
                 return (
                   <div
@@ -372,9 +368,9 @@ export const LeadershipSection: React.FC = () => {
                       <div className="space-y-1.5 sm:space-y-2.5">
                         <div className="flex items-center gap-2 sm:gap-3">
                           <div className="relative shrink-0">
-                            {officer.avatar ? (
+                            {officerPhoto ? (
                               <img
-                                src={officer.avatar}
+                                src={officerPhoto}
                                 alt={officer.fullName}
                                 className="w-9 h-9 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl object-cover border border-emerald-500/20 group-hover:scale-105 transition"
                               />
@@ -405,16 +401,16 @@ export const LeadershipSection: React.FC = () => {
                           </div>
                         </div>
 
-                        {officer.description && (
+                        {officerBio && (
                           <p className="hidden sm:block text-[11px] text-slate-600 line-clamp-2 leading-relaxed">
-                            {officer.description}
+                            {officerBio}
                           </p>
                         )}
                       </div>
 
                       <div className="pt-1.5 mt-1.5 sm:pt-2.5 sm:mt-2.5 border-t border-slate-100 flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500">
                         <span className="text-[9px] sm:text-[10px] font-medium text-slate-400 truncate">
-                          Pengurus Harian
+                          {officer.department || 'Pengurus Harian'}
                         </span>
                         <span className="inline-flex items-center gap-0.5 font-semibold text-emerald-700 group-hover:translate-x-0.5 transition shrink-0">
                           <span>Detail</span>
@@ -441,9 +437,9 @@ export const LeadershipSection: React.FC = () => {
         >
           <div className="space-y-4">
             <div className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-50/70 border border-emerald-100">
-              {selectedOfficer.avatar ? (
+              {selectedOfficer.photoUrl || selectedOfficer.avatar ? (
                 <img
-                  src={selectedOfficer.avatar}
+                  src={selectedOfficer.photoUrl || selectedOfficer.avatar}
                   alt={selectedOfficer.fullName}
                   className="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-600 shadow-md shrink-0"
                 />
@@ -469,11 +465,11 @@ export const LeadershipSection: React.FC = () => {
               </div>
             </div>
 
-            {selectedOfficer.description && (
+            {(selectedOfficer.bio || selectedOfficer.description) && (
               <div className="space-y-1">
                 <span className="text-xs font-bold text-slate-700">Profil & Dedikasi:</span>
                 <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-100">
-                  {selectedOfficer.description}
+                  {selectedOfficer.bio || selectedOfficer.description}
                 </p>
               </div>
             )}

@@ -153,9 +153,15 @@ function saveStored<T>(key: string, data: T): void {
 }
 
 function normalizeOfficer(o: Officer): Officer {
-  const photo = o.photoUrl || o.avatar || '';
-  const bioText = o.bio || o.description || '';
-  const order = o.orderIndex ?? o.displayOrder ?? 1;
+  const initialMatch = INITIAL_OFFICERS.find((init) => init.id === o.id);
+  const defaultPhoto =
+    initialMatch?.photoUrl ||
+    (o.organization === 'IPPNU'
+      ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'
+      : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80');
+  const photo = o.photoUrl || o.avatar || (!o.unitId ? defaultPhoto : '');
+  const bioText = o.bio || o.description || initialMatch?.bio || '';
+  const order = o.orderIndex ?? o.displayOrder ?? initialMatch?.orderIndex ?? 1;
   return {
     ...o,
     photoUrl: photo,
@@ -577,6 +583,62 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       );
     }
 
+    // If pacOfficersSlider was updated in CMS, sync changes directly to main PAC officers database
+    if (newSettings.pacOfficersSlider) {
+      const incomingSlides = newSettings.pacOfficersSlider;
+      setOfficers((prevOfficers) => {
+        const unitOfficers = prevOfficers.filter((o) => !!o.unitId);
+        const existingPacOfficers = prevOfficers.filter((o) => !o.unitId);
+
+        const syncedPacOfficers: Officer[] = incomingSlides.map((slide, idx) => {
+          const rawOfficerId = slide.id.startsWith('slide-') ? slide.id.replace('slide-', '') : slide.id;
+          const match = existingPacOfficers.find(
+            (o) =>
+              o.id === rawOfficerId ||
+              o.fullName.toLowerCase() === slide.name.toLowerCase() ||
+              (o.organization === slide.organization &&
+                o.position.toLowerCase() === slide.position.toLowerCase())
+          );
+
+          if (match) {
+            return normalizeOfficer({
+              ...match,
+              fullName: slide.name,
+              position: slide.position,
+              organization: slide.organization,
+              photoUrl: slide.photo || match.photoUrl,
+              avatar: slide.photo || match.avatar,
+              bio: slide.quote || match.bio,
+              description: slide.quote || match.description,
+              orderIndex: idx + 1,
+              displayOrder: idx + 1,
+            });
+          }
+
+          return normalizeOfficer({
+            id: rawOfficerId.startsWith('pac-off-') || rawOfficerId.startsWith('off-') ? rawOfficerId : `pac-off-${Date.now()}-${idx}`,
+            fullName: slide.name,
+            nia: `35.25.04.2024.0${idx + 10}`,
+            gender: slide.organization === 'IPPNU' ? 'P' : 'L',
+            position: slide.position,
+            department: 'Badan Pengurus Harian',
+            organization: slide.organization,
+            phone: '0812-3456-7890',
+            photoUrl: slide.photo,
+            avatar: slide.photo,
+            period: '2024 - 2026',
+            status: 'Aktif',
+            orderIndex: idx + 1,
+            displayOrder: idx + 1,
+            bio: slide.quote || `Pengurus Harian PAC ${slide.organization} Kecamatan Dukun`,
+            description: slide.quote || `Pengurus Harian PAC ${slide.organization} Kecamatan Dukun`,
+          });
+        });
+
+        return [...syncedPacOfficers, ...unitOfficers];
+      });
+    }
+
     logActivity('Perbarui Pengaturan Web', 'Website CMS', 'Memperbarui konfigurasi utama');
     showToast('Pengaturan website berhasil diperbarui & disinkronkan', 'success');
   };
@@ -701,6 +763,53 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('Ranting/Komisariat berhasil dihapus', 'info');
   };
 
+  // Keep settings.pacOfficersSlider 100% synchronized with all main PAC officers (!o.unitId)
+  useEffect(() => {
+    const pacOnly = officers
+      .filter((o) => !o.unitId)
+      .sort((a, b) => (a.displayOrder ?? a.orderIndex ?? 99) - (b.displayOrder ?? b.orderIndex ?? 99));
+
+    if (pacOnly.length === 0) return;
+
+    const syncedSlides = pacOnly.map((o) => ({
+      id: `slide-${o.id}`,
+      name: o.fullName,
+      position: o.position,
+      organization: (o.organization === 'IPPNU' ? 'IPPNU' : 'IPNU') as 'IPNU' | 'IPPNU',
+      photo:
+        o.photoUrl ||
+        o.avatar ||
+        (o.organization === 'IPPNU'
+          ? 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=400&q=80'
+          : 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80'),
+      quote:
+        o.bio ||
+        o.description ||
+        `Pengurus Harian PAC ${o.organization} Kecamatan Dukun`,
+    }));
+
+    setSettings((prev) => {
+      const current = prev.pacOfficersSlider || [];
+      const isSame =
+        current.length === syncedSlides.length &&
+        current.every(
+          (c, i) =>
+            c.id === syncedSlides[i].id &&
+            c.name === syncedSlides[i].name &&
+            c.position === syncedSlides[i].position &&
+            c.organization === syncedSlides[i].organization &&
+            c.photo === syncedSlides[i].photo &&
+            c.quote === syncedSlides[i].quote
+        );
+
+      if (isSame) return prev;
+      return {
+        ...prev,
+        pacOfficersSlider: syncedSlides,
+      };
+    });
+  }, [officers]);
+
   // Helper to sync PAC Officer changes into settings.pacOfficersSlider and settings.historicalLeaders
   const syncPacOfficerToSettings = (officer: Officer, isDeleted = false) => {
     if (officer.unitId) return; // Only PAC officers
@@ -709,39 +818,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     const org: 'IPNU' | 'IPPNU' = officer.organization === 'IPPNU' ? 'IPPNU' : 'IPNU';
 
     setSettings((prev) => {
-      let nextSlider = [...(prev.pacOfficersSlider || [])];
-      const existingSlideIdx = nextSlider.findIndex(
-        (s) =>
-          s.id === `slide-${officer.id}` ||
-          s.name.toLowerCase() === officer.fullName.toLowerCase() ||
-          (s.organization === org && s.position.toLowerCase() === officer.position.toLowerCase())
-      );
-
-      if (isDeleted) {
-        if (existingSlideIdx !== -1) {
-          nextSlider.splice(existingSlideIdx, 1);
-        }
-      } else if (existingSlideIdx !== -1) {
-        nextSlider[existingSlideIdx] = {
-          ...nextSlider[existingSlideIdx],
-          name: officer.fullName,
-          position: officer.position,
-          organization: org,
-          photo: photo || nextSlider[existingSlideIdx].photo,
-          quote: quote || nextSlider[existingSlideIdx].quote,
-        };
-      } else {
-        nextSlider.push({
-          id: `slide-${officer.id}`,
-          name: officer.fullName,
-          position: officer.position,
-          organization: org,
-          photo,
-          quote,
-        });
-      }
-
-      // Also sync settings.historicalLeaders if this PAC officer is Ketua IPNU or Ketua IPPNU
+      // Sync settings.historicalLeaders if this PAC officer is Ketua IPNU or Ketua IPPNU
       let nextLeaders = [...(prev.historicalLeaders || [])];
       const isMainKetua =
         officer.position.toLowerCase().includes('ketua') &&
@@ -775,7 +852,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       return {
         ...prev,
-        pacOfficersSlider: nextSlider,
         historicalLeaders: nextLeaders,
       };
     });

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
@@ -183,6 +183,13 @@ export const WebsiteSettingsView: React.FC = () => {
   const [pacSliderList, setPacSliderList] = useState<PacOfficerSlide[]>([
     ...(settings.pacOfficersSlider || []),
   ]);
+
+  useEffect(() => {
+    if (settings.pacOfficersSlider) {
+      setPacSliderList([...settings.pacOfficersSlider]);
+    }
+  }, [settings.pacOfficersSlider]);
+
   const [isPacSlideModalOpen, setIsPacSlideModalOpen] = useState(false);
   const [selectedPacSlide, setSelectedPacSlide] = useState<PacOfficerSlide | null>(null);
   const [pacSlideForm, setPacSlideForm] = useState({
