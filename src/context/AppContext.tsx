@@ -436,12 +436,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // Toast Helpers
   const showToast = (message: string, type: ToastMessage['type'] = 'success') => {
-    const id = 'toast_' + Date.now() + Math.random().toString(36).substring(2, 6);
-    setToasts((prev) => [...prev, { id, message, type }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 4500);
-  };
+  const id = 'toast_' + Date.now() + Math.random().toString(36).substring(2, 6);
+  setToasts((prev) => [...prev, { id, message, type }]);
+  setTimeout(() => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, 4500);
+};
 
   const dismissToast = (id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
