@@ -144,7 +144,10 @@ const syncChannel =
 
 function persistToApiBackend<T>(key: string, data: T, shouldSyncRemote = true): void {
   if (!shouldSyncRemote) return;
-// Sinkronkan favicon tab browser otomatis dari properti logo mana pun di settings
+useEffect(() => persistToApiBackend('weights', weights, canPersist()), [weights]);
+  useEffect(() => persistToApiBackend('currentUser', currentUser, canPersist()), [currentUser]);
+
+  // Sinkronkan favicon tab browser otomatis dari properti logo mana pun di settings
   useEffect(() => {
     if (!settings || typeof settings !== 'object') return;
 
@@ -156,6 +159,20 @@ function persistToApiBackend<T>(key: string, data: T, shouldSyncRemote = true): 
         (val.startsWith('http') || val.startsWith('data:image'))
       );
     });
+
+    if (logoEntry) {
+      const activeLogo = logoEntry[1] as string;
+      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+      link.href = activeLogo;
+    }
+  }, [settings]);
+
+  // Real-time Cross-Tab Synchronization via BroadcastChannel (replaces localStorage event)
 
     if (logoEntry) {
       const activeLogo = logoEntry[1] as string;
