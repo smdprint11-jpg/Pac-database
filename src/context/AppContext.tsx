@@ -144,30 +144,7 @@ const syncChannel =
 
 function persistToApiBackend<T>(key: string, data: T, shouldSyncRemote = true): void {
   if (!shouldSyncRemote) return;
-// Sinkronkan favicon tab browser otomatis dari properti logo mana pun di settings
-  useEffect(() => {
-    if (!settings || typeof settings !== 'object') return;
 
-    const logoEntry = Object.entries(settings).find(([key, val]) => {
-      const k = key.toLowerCase();
-      return (
-        (k.includes('logo') || k.includes('icon')) &&
-        typeof val === 'string' &&
-        (val.startsWith('http') || val.startsWith('data:image'))
-      );
-    });
-
-    if (logoEntry) {
-      const activeLogo = logoEntry[1] as string;
-      let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement | null;
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = 'icon';
-        document.head.appendChild(link);
-      }
-      link.href = activeLogo;
-    }
-  }, [settings]);
   // Broadcast to other open tabs via BroadcastChannel
   try {
     syncChannel?.postMessage({ type: 'COLLECTION_UPDATE', key, data });
