@@ -136,45 +136,42 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-const STORAGE_PREFIX = 'pelajar_nu_dukun_v2_';
+const SYNC_CHANNEL_NAME = 'pelajar_nu_dukun_kv_d1_sync';
+const syncChannel =
+  typeof window !== 'undefined' && 'BroadcastChannel' in window
+    ? new BroadcastChannel(SYNC_CHANNEL_NAME)
+    : null;
 
-function loadStored<T>(key: string, fallback: T): T {
+function persistToApiBackend<T>(key: string, data: T, shouldSyncRemote = true): void {
+  if (!shouldSyncRemote) return;
+
+  // Broadcast to other open tabs via BroadcastChannel
   try {
-    const raw = localStorage.getItem(STORAGE_PREFIX + key);
-    return raw ? JSON.parse(raw) : fallback;
+    syncChannel?.postMessage({ type: 'COLLECTION_UPDATE', key, data });
   } catch {
-    return fallback;
-  }
-}
-
-function saveStored<T>(key: string, data: T, syncToSql = true): void {
-  try {
-    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(data));
-  } catch (err) {
-    console.error('Storage write error:', err);
+    // Ignore BroadcastChannel errors
   }
 
-  if (syncToSql && key !== 'currentUser') {
-    (async () => {
-      try {
-        const token = await getValidAuthToken();
-        const endpoint = token ? '/api/protected/state' : '/api/state';
-        const headers: Record<string, string> = {
-          'Content-Type': 'application/json',
-        };
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`;
-        }
-        await fetch(endpoint, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ collectionKey: key, data }),
-        });
-      } catch {
-        // Fallback silently if offline
+  // Persist to Backend API / Cloudflare Pages Functions (KV & D1)
+  (async () => {
+    try {
+      const token = await getValidAuthToken();
+      const endpoint = token ? '/api/protected/state' : '/api/state';
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
       }
-    })();
-  }
+      await fetch(endpoint, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ collectionKey: key, data }),
+      });
+    } catch {
+      // Fallback silently if network is temporarily unavailable
+    }
+  })();
 }
 
 function normalizeOfficer(o: Officer): Officer {
@@ -246,73 +243,108 @@ function normalizeAlumni(a: Alumni): Alumni {
 }
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [settings, setSettings] = useState<WebsiteSettings>(() => loadStored('settings', INITIAL_SETTINGS));
-  const [slides, setSlides] = useState<HeroSlide[]>(() => loadStored('slides', INITIAL_SLIDES));
-  const [units, setUnits] = useState<UnitOrganization[]>(() => loadStored('units', INITIAL_UNITS));
-  const [officers, setOfficers] = useState<Officer[]>(() =>
-    loadStored('officers', INITIAL_OFFICERS).map(normalizeOfficer)
-  );
-  const [members, setMembers] = useState<Member[]>(() =>
-    loadStored('members', INITIAL_MEMBERS).map(normalizeMember)
-  );
+  const [settings, setSettings] = useState<WebsiteSettings>(INITIAL_SETTINGS);
+  const [slides, setSlides] = useState<HeroSlide[]>(INITIAL_SLIDES);
+  const [units, setUnits] = useState<UnitOrganization[]>(INITIAL_UNITS);
+  const [officers, setOfficers] = useState<Officer[]>(() => INITIAL_OFFICERS.map(normalizeOfficer));
+  const [members, setMembers] = useState<Member[]>(() => INITIAL_MEMBERS.map(normalizeMember));
   const [supervisors, setSupervisors] = useState<Supervisor[]>(() =>
-    loadStored('supervisors', INITIAL_SUPERVISORS).map(normalizeSupervisor)
+    INITIAL_SUPERVISORS.map(normalizeSupervisor)
   );
-  const [alumni, setAlumni] = useState<Alumni[]>(() =>
-    loadStored('alumni', INITIAL_ALUMNI).map(normalizeAlumni)
-  );
-  const [spDocuments, setSpDocuments] = useState<SpDocument[]>(() => loadStored('spDocs', INITIAL_SP_DOCUMENTS));
+  const [alumni, setAlumni] = useState<Alumni[]>(() => INITIAL_ALUMNI.map(normalizeAlumni));
+  const [spDocuments, setSpDocuments] = useState<SpDocument[]>(INITIAL_SP_DOCUMENTS);
   const [activities, setActivities] = useState<Activity[]>(() =>
-    loadStored('activities', INITIAL_ACTIVITIES).map(normalizeActivity)
+    INITIAL_ACTIVITIES.map(normalizeActivity)
   );
-  const [users, setUsers] = useState<UserAccount[]>(() => loadStored('users', INITIAL_USERS));
-  const [logs, setLogs] = useState<ActivityLog[]>(() => loadStored('logs', INITIAL_LOGS));
-  const [notifications, setNotifications] = useState<SystemNotification[]>(() => loadStored('notifications', INITIAL_NOTIFICATIONS));
-  const [weights, setWeights] = useState<CompletenessWeights>(() => loadStored('weights', DEFAULT_WEIGHTS));
-  const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => loadStored('currentUser', null));
+  const [users, setUsers] = useState<UserAccount[]>(INITIAL_USERS);
+  const [logs, setLogs] = useState<ActivityLog[]>(INITIAL_LOGS);
+  const [notifications, setNotifications] = useState<SystemNotification[]>(INITIAL_NOTIFICATIONS);
+  const [weights, setWeights] = useState<CompletenessWeights>(DEFAULT_WEIGHTS);
+  const [currentUser, setCurrentUser] = useState<UserAccount | null>(null);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const isHydratingFromSql = useRef(false);
+  const isHydratingFromRemote = useRef(true);
+  const hasInitializedFromApi = useRef(false);
 
-  // Hydrate from Cloud SQL database on initial load
+  const applyRemoteCollections = (cols: Record<string, any>) => {
+    isHydratingFromRemote.current = true;
+    if (cols.settings) setSettings(cols.settings);
+    if (Array.isArray(cols.slides) && cols.slides.length > 0) setSlides(cols.slides);
+    if (Array.isArray(cols.units) && cols.units.length > 0) setUnits(cols.units);
+    if (Array.isArray(cols.officers) && cols.officers.length > 0) {
+      setOfficers((cols.officers as Officer[]).map(normalizeOfficer));
+    }
+    if (Array.isArray(cols.members) && cols.members.length > 0) {
+      setMembers((cols.members as Member[]).map(normalizeMember));
+    }
+    if (Array.isArray(cols.supervisors) && cols.supervisors.length > 0) {
+      setSupervisors((cols.supervisors as Supervisor[]).map(normalizeSupervisor));
+    }
+    if (Array.isArray(cols.alumni) && cols.alumni.length > 0) {
+      setAlumni((cols.alumni as Alumni[]).map(normalizeAlumni));
+    }
+    if (Array.isArray(cols.spDocs) && cols.spDocs.length > 0) setSpDocuments(cols.spDocs);
+    if (Array.isArray(cols.activities) && cols.activities.length > 0) {
+      setActivities((cols.activities as Activity[]).map(normalizeActivity));
+    }
+    if (Array.isArray(cols.users) && cols.users.length > 0) setUsers(cols.users);
+    if (Array.isArray(cols.logs) && cols.logs.length > 0) setLogs(cols.logs);
+    if (Array.isArray(cols.notifications)) setNotifications(cols.notifications);
+    if (cols.weights) setWeights(cols.weights);
+    if (cols.currentUser !== undefined) setCurrentUser(cols.currentUser);
+
+    setTimeout(() => {
+      isHydratingFromRemote.current = false;
+      hasInitializedFromApi.current = true;
+    }, 150);
+  };
+
+  // Hydrate from Backend API / Pages Functions (KV & D1) on initial load
   useEffect(() => {
     let mounted = true;
     (async () => {
       try {
         const res = await fetch('/api/state');
-        if (!res.ok) return;
+        if (!res.ok) {
+          isHydratingFromRemote.current = false;
+          hasInitializedFromApi.current = true;
+          return;
+        }
         const payload = await res.json();
-        if (!mounted || !payload?.collections) return;
-        const cols = payload.collections;
-        isHydratingFromSql.current = true;
+        if (!mounted) return;
+        const cols = payload?.collections || {};
 
-        if (cols.settings) setSettings(cols.settings);
-        if (Array.isArray(cols.slides) && cols.slides.length > 0) setSlides(cols.slides);
-        if (Array.isArray(cols.units) && cols.units.length > 0) setUnits(cols.units);
-        if (Array.isArray(cols.officers) && cols.officers.length > 0) {
-          setOfficers((cols.officers as Officer[]).map(normalizeOfficer));
+        if (Object.keys(cols).length > 0) {
+          applyRemoteCollections(cols);
+        } else {
+          // Seed initial collections to KV/D1 backend on first run
+          isHydratingFromRemote.current = false;
+          hasInitializedFromApi.current = true;
+          await fetch('/api/state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              collections: {
+                settings: INITIAL_SETTINGS,
+                slides: INITIAL_SLIDES,
+                units: INITIAL_UNITS,
+                officers: INITIAL_OFFICERS.map(normalizeOfficer),
+                members: INITIAL_MEMBERS.map(normalizeMember),
+                supervisors: INITIAL_SUPERVISORS.map(normalizeSupervisor),
+                alumni: INITIAL_ALUMNI.map(normalizeAlumni),
+                spDocs: INITIAL_SP_DOCUMENTS,
+                activities: INITIAL_ACTIVITIES.map(normalizeActivity),
+                users: INITIAL_USERS,
+                logs: INITIAL_LOGS,
+                notifications: INITIAL_NOTIFICATIONS,
+                weights: DEFAULT_WEIGHTS,
+              },
+            }),
+          });
         }
-        if (Array.isArray(cols.members) && cols.members.length > 0) {
-          setMembers((cols.members as Member[]).map(normalizeMember));
-        }
-        if (Array.isArray(cols.supervisors) && cols.supervisors.length > 0) {
-          setSupervisors((cols.supervisors as Supervisor[]).map(normalizeSupervisor));
-        }
-        if (Array.isArray(cols.alumni) && cols.alumni.length > 0) {
-          setAlumni((cols.alumni as Alumni[]).map(normalizeAlumni));
-        }
-        if (Array.isArray(cols.spDocs) && cols.spDocs.length > 0) setSpDocuments(cols.spDocs);
-        if (Array.isArray(cols.activities) && cols.activities.length > 0) {
-          setActivities((cols.activities as Activity[]).map(normalizeActivity));
-        }
-        if (Array.isArray(cols.users) && cols.users.length > 0) setUsers(cols.users);
-        if (cols.weights) setWeights(cols.weights);
-
-        setTimeout(() => {
-          isHydratingFromSql.current = false;
-        }, 200);
       } catch {
-        // Fallback to local state if backend is unreachable
+        isHydratingFromRemote.current = false;
+        hasInitializedFromApi.current = true;
       }
     })();
     return () => {
@@ -320,76 +352,86 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
   }, []);
 
-  // Sync to storage & SQL database
-  useEffect(() => saveStored('settings', settings, !isHydratingFromSql.current), [settings]);
-  useEffect(() => saveStored('slides', slides, !isHydratingFromSql.current), [slides]);
-  useEffect(() => saveStored('units', units, !isHydratingFromSql.current), [units]);
-  useEffect(() => saveStored('officers', officers, !isHydratingFromSql.current), [officers]);
-  useEffect(() => saveStored('members', members, !isHydratingFromSql.current), [members]);
-  useEffect(() => saveStored('supervisors', supervisors, !isHydratingFromSql.current), [supervisors]);
-  useEffect(() => saveStored('alumni', alumni, !isHydratingFromSql.current), [alumni]);
-  useEffect(() => saveStored('spDocs', spDocuments, !isHydratingFromSql.current), [spDocuments]);
-  useEffect(() => saveStored('activities', activities, !isHydratingFromSql.current), [activities]);
-  useEffect(() => saveStored('users', users, !isHydratingFromSql.current), [users]);
-  useEffect(() => saveStored('logs', logs, !isHydratingFromSql.current), [logs]);
-  useEffect(() => saveStored('notifications', notifications, !isHydratingFromSql.current), [notifications]);
-  useEffect(() => saveStored('weights', weights, !isHydratingFromSql.current), [weights]);
-  useEffect(() => saveStored('currentUser', currentUser, false), [currentUser]);
+  // Sync every collection update to Backend API / Pages Functions (KV & D1)
+  const canPersist = () => hasInitializedFromApi.current && !isHydratingFromRemote.current;
 
-  // Real-time Cross-Tab Synchronization via window storage event
+  useEffect(() => persistToApiBackend('settings', settings, canPersist()), [settings]);
+  useEffect(() => persistToApiBackend('slides', slides, canPersist()), [slides]);
+  useEffect(() => persistToApiBackend('units', units, canPersist()), [units]);
+  useEffect(() => persistToApiBackend('officers', officers, canPersist()), [officers]);
+  useEffect(() => persistToApiBackend('members', members, canPersist()), [members]);
+  useEffect(() => persistToApiBackend('supervisors', supervisors, canPersist()), [supervisors]);
+  useEffect(() => persistToApiBackend('alumni', alumni, canPersist()), [alumni]);
+  useEffect(() => persistToApiBackend('spDocs', spDocuments, canPersist()), [spDocuments]);
+  useEffect(() => persistToApiBackend('activities', activities, canPersist()), [activities]);
+  useEffect(() => persistToApiBackend('users', users, canPersist()), [users]);
+  useEffect(() => persistToApiBackend('logs', logs, canPersist()), [logs]);
+  useEffect(() => persistToApiBackend('notifications', notifications, canPersist()), [notifications]);
+  useEffect(() => persistToApiBackend('weights', weights, canPersist()), [weights]);
+  useEffect(() => persistToApiBackend('currentUser', currentUser, canPersist()), [currentUser]);
+
+  // Real-time Cross-Tab Synchronization via BroadcastChannel (replaces localStorage event)
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (!e.key || !e.key.startsWith(STORAGE_PREFIX) || !e.newValue) return;
-      const shortKey = e.key.replace(STORAGE_PREFIX, '');
+    if (!syncChannel) return;
+    const handleChannelMessage = (event: MessageEvent) => {
+      const msg = event.data;
+      if (!msg || msg.type !== 'COLLECTION_UPDATE') return;
+      const { key, data } = msg;
+      isHydratingFromRemote.current = true;
       try {
-        const parsed = JSON.parse(e.newValue);
-        switch (shortKey) {
+        switch (key) {
           case 'settings':
-            setSettings(parsed);
+            setSettings(data);
             break;
           case 'slides':
-            setSlides(parsed);
+            setSlides(data);
             break;
           case 'units':
-            setUnits(parsed);
+            setUnits(data);
             break;
           case 'officers':
-            setOfficers((parsed as Officer[]).map(normalizeOfficer));
+            setOfficers((data as Officer[]).map(normalizeOfficer));
             break;
           case 'members':
-            setMembers((parsed as Member[]).map(normalizeMember));
+            setMembers((data as Member[]).map(normalizeMember));
             break;
           case 'supervisors':
-            setSupervisors((parsed as Supervisor[]).map(normalizeSupervisor));
+            setSupervisors((data as Supervisor[]).map(normalizeSupervisor));
             break;
           case 'alumni':
-            setAlumni((parsed as Alumni[]).map(normalizeAlumni));
+            setAlumni((data as Alumni[]).map(normalizeAlumni));
             break;
           case 'spDocs':
-            setSpDocuments(parsed);
+            setSpDocuments(data);
             break;
           case 'activities':
-            setActivities((parsed as Activity[]).map(normalizeActivity));
+            setActivities((data as Activity[]).map(normalizeActivity));
             break;
           case 'users':
-            setUsers(parsed);
+            setUsers(data);
             break;
           case 'logs':
-            setLogs(parsed);
+            setLogs(data);
             break;
           case 'notifications':
-            setNotifications(parsed);
+            setNotifications(data);
             break;
           case 'weights':
-            setWeights(parsed);
+            setWeights(data);
+            break;
+          case 'currentUser':
+            setCurrentUser(data);
             break;
         }
-      } catch {
-        // Ignore parse errors
+      } finally {
+        setTimeout(() => {
+          isHydratingFromRemote.current = false;
+        }, 100);
       }
     };
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+
+    syncChannel.addEventListener('message', handleChannelMessage);
+    return () => syncChannel.removeEventListener('message', handleChannelMessage);
   }, []);
 
   // Toast Helpers
@@ -1065,6 +1107,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const deleteOfficer = (id: string) => {
     const target = officers.find((o) => o.id === id);
     setOfficers((prev) => prev.filter((o) => o.id !== id));
+    fetch(`/api/officers/${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
     if (target) {
       if (!target.unitId) {
         syncPacOfficerToSettings(target, true);
@@ -1535,23 +1578,53 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     showToast('Seluruh riwayat notifikasi dibersihkan', 'info');
   };
 
-  // Reset
+  // Reset via Backend API / Pages Functions (KV & D1)
   const resetDatabase = () => {
     setSettings(INITIAL_SETTINGS);
     setSlides(INITIAL_SLIDES);
     setUnits(INITIAL_UNITS);
-    setOfficers(INITIAL_OFFICERS);
-    setMembers(INITIAL_MEMBERS);
-    setSupervisors(INITIAL_SUPERVISORS);
-    setAlumni(INITIAL_ALUMNI);
+    setOfficers(INITIAL_OFFICERS.map(normalizeOfficer));
+    setMembers(INITIAL_MEMBERS.map(normalizeMember));
+    setSupervisors(INITIAL_SUPERVISORS.map(normalizeSupervisor));
+    setAlumni(INITIAL_ALUMNI.map(normalizeAlumni));
     setSpDocuments(INITIAL_SP_DOCUMENTS);
-    setActivities(INITIAL_ACTIVITIES);
+    setActivities(INITIAL_ACTIVITIES.map(normalizeActivity));
     setUsers(INITIAL_USERS);
     setLogs(INITIAL_LOGS);
     setNotifications(INITIAL_NOTIFICATIONS);
     setWeights(DEFAULT_WEIGHTS);
     setCurrentUser(null);
-    localStorage.clear();
+
+    (async () => {
+      try {
+        await fetch('/api/state/reset', { method: 'POST' });
+        await fetch('/api/state', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            collections: {
+              settings: INITIAL_SETTINGS,
+              slides: INITIAL_SLIDES,
+              units: INITIAL_UNITS,
+              officers: INITIAL_OFFICERS.map(normalizeOfficer),
+              members: INITIAL_MEMBERS.map(normalizeMember),
+              supervisors: INITIAL_SUPERVISORS.map(normalizeSupervisor),
+              alumni: INITIAL_ALUMNI.map(normalizeAlumni),
+              spDocs: INITIAL_SP_DOCUMENTS,
+              activities: INITIAL_ACTIVITIES.map(normalizeActivity),
+              users: INITIAL_USERS,
+              logs: INITIAL_LOGS,
+              notifications: INITIAL_NOTIFICATIONS,
+              weights: DEFAULT_WEIGHTS,
+              currentUser: null,
+            },
+          }),
+        });
+      } catch {
+        // Ignore network errors during reset
+      }
+    })();
+
     showToast('Database berhasil direset ke data awal!', 'success');
   };
 

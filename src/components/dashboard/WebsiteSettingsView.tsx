@@ -30,6 +30,7 @@ import {
   FileCode,
 } from 'lucide-react';
 import { generateMySqlDump } from '../../utils/phpMysqlExport';
+import { generateCloudflareD1Sql } from '../../utils/cloudflareD1Export';
 
 export const WebsiteSettingsView: React.FC = () => {
   const {
@@ -2627,7 +2628,57 @@ export const WebsiteSettingsView: React.FC = () => {
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
               <span className="text-slate-500 font-semibold block">Tabel Anggota Kader (`members`)</span>
               <strong className="text-lg font-black text-slate-900">{members.length} Kader Terdaftar</strong>
-              <p className="text-[11px] text-slate-500">Siap diimpor langsung ke phpMyAdmin / MySQL Server</p>
+              <p className="text-[11px] text-slate-500">Siap diimpor langsung ke phpMyAdmin / MySQL Server & D1</p>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
+                <Database className="w-4 h-4 text-emerald-600" />
+                <span>Integrasi API Backend & Cloudflare Pages Functions (KV / D1)</span>
+              </h4>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Seluruh state aplikasi kini tersimpan di API Backend (`/api/state`, `/api/kv/[key]`, `/api/d1/officers`) tanpa `localStorage`
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const d1Sql = generateCloudflareD1Sql({
+                    settings,
+                    officers,
+                    units,
+                    members,
+                    spDocuments,
+                    activities,
+                    supervisors,
+                    alumni,
+                  });
+                  const blob = new Blob([d1Sql], { type: 'application/sql;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `schema.d1.sql`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  showToast('File Migrasi Cloudflare D1 (schema.d1.sql) berhasil diunduh', 'success');
+                }}
+                className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs cursor-pointer"
+              >
+                <Download className="w-4 h-4" />
+                <span>Download D1 Schema (`schema.d1.sql`)</span>
+              </button>
+
+              <a
+                href="/cloudflare-kv-d1/wrangler.toml"
+                download="wrangler.toml"
+                className="px-3.5 py-2 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold flex items-center gap-1.5 transition"
+              >
+                <FileCode className="w-4 h-4" />
+                <span>Unduh `wrangler.toml` (KV & D1)</span>
+              </a>
             </div>
           </div>
         </div>

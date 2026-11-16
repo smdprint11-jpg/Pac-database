@@ -1,0 +1,15 @@
+name = "pelajar-nu-dukun"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-01-01"
+
+# Cloudflare KV Namespace Binding (Penyimpanan Cepat Key-Value untuk Koleksi State & CMS)
+[[kv_namespaces]]
+binding = "PAC_KV"
+id = "pac_ipnu_ippnu_dukun_kv_namespace_id"
+preview_id = "pac_ipnu_ippnu_dukun_kv_preview_id"
+
+# Cloudflare D1 Database Binding (Database SQL Serverless untuk Pengurus, Ranting/PK, Anggota & State)
+[[d1_databases]]
+binding = "PAC_D1"
+database_name = "db_pelajar_nu_dukun"
+database_id = "pac_ipnu_ippnu_dukun_d1_database_id"

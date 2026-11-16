@@ -140,6 +140,39 @@ export async function upsertOfficerInSql(officer: {
   }
 }
 
+export async function getCollectionByKey(collectionKey: string) {
+  try {
+    const rows = await db
+      .select()
+      .from(appStateCollections)
+      .where(eq(appStateCollections.collectionKey, collectionKey));
+    return rows[0] || null;
+  } catch (error) {
+    console.error(`Database query failed in getCollectionByKey (${collectionKey}):`, error);
+    throw new Error('Failed to load key from database.', { cause: error });
+  }
+}
+
+export async function deleteCollectionByKey(collectionKey: string) {
+  try {
+    await db
+      .delete(appStateCollections)
+      .where(eq(appStateCollections.collectionKey, collectionKey));
+  } catch (error) {
+    console.error(`Database query failed in deleteCollectionByKey (${collectionKey}):`, error);
+    throw new Error('Failed to delete key from database.', { cause: error });
+  }
+}
+
+export async function deleteAllCollections() {
+  try {
+    await db.delete(appStateCollections);
+  } catch (error) {
+    console.error('Database query failed in deleteAllCollections:', error);
+    throw new Error('Failed to reset state collections.', { cause: error });
+  }
+}
+
 export async function deleteOfficerFromSql(id: string) {
   try {
     await db.delete(pacOfficers).where(eq(pacOfficers.id, id));
@@ -148,3 +181,13 @@ export async function deleteOfficerFromSql(id: string) {
     throw new Error('Failed to delete officer from SQL database.', { cause: error });
   }
 }
+
+export async function deleteAllOfficersFromSql() {
+  try {
+    await db.delete(pacOfficers);
+  } catch (error) {
+    console.error('Database query failed in deleteAllOfficersFromSql:', error);
+    throw new Error('Failed to reset officers table in SQL database.', { cause: error });
+  }
+}
+
