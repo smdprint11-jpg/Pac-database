@@ -392,7 +392,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           case 'members': setMembers((data as Member[]).map(normalizeMember)); break;
           case 'supervisors': setSupervisors((data as Supervisor[]).map(normalizeSupervisor)); break;
           case 'alumni': setAlumni((data as Alumni[]).map(normalizeAlumni)); break;
-          case 'spDocs': setSpDocuments(data); break;
+          case 'spDocuments': setSpDocuments(data); break;
           case 'activities': setActivities((data as Activity[]).map(normalizeActivity)); break;
           case 'users': setUsers(data); break;
           case 'logs': setLogs(data); break;
